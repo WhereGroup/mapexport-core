@@ -1,9 +1,8 @@
 <?php
 
-namespace Wheregroup\PrintBundle\Component;
+namespace Wheregroup\MapExport\CoreBundle\Component;
 
-
-use Wheregroup\PrintBundle\Entity\Image;
+use Wheregroup\MapExport\CoreBundle\Entity\MapCanvas;
 
 class FeatureRenderer
 {
@@ -27,100 +26,288 @@ class FeatureRenderer
     {
     }
 
-    public function getWorldFormat($centerx, $centery, $extentwidth, $extentheight, $width, $height)
-    {
-        return array(
-            'worldX' => $centerx - ($extentwidth / 2),
-            'worldY' => $centery - ($extentheight / 2),
-            'worldWidth' => $extentwidth,
-            'worldHeight' => $extentheight,
-            'pixelWidth' => $width,
-            'pixelHeight' => $height
-        );
-    }
-
     /**
-     * @param Image $img
-     * @param $features
-     * @param $worldFormat
+     * @param MapCanvas $canvas
+     * @param $feature
      * @return mixed
      */
-    public function renderAll($img, $features, $worldFormat)
+    public function drawFeature($canvas, $feature)
     {
-        foreach ($features as $vectorLayer) {
-            foreach ($vectorLayer['geometries'] as $figure) {
-                $color = $this->getColor($figure['style']['strokeColor']);
+        $geometry = $this->getGeometry($feature);
+        $style = $this->getStyle($feature);
 
-                switch ($figure['type']) {
-                    case 'Polygon':
-                        $pointarrays = array();
-                        foreach ($figure['coordinates'] as $pointarray) {
-                            array_push($pointarrays, $this->transformPoints($pointarray,
-                                array($worldFormat['worldX'], $worldFormat['worldY']),
-                                array($worldFormat['worldWidth'], $worldFormat['worldHeight']),
-                                array($worldFormat['pixelWidth'], $worldFormat['pixelHeight'])));
-                        }
-                        $img->drawPolygon($pointarrays, $color, $figure['style']['strokeWidth'],
-                            $figure['style']['fillOpacity']);
-                        break;
-                    case 'Point':
-                        $points = $this->transformPoints(array($figure['coordinates']),
-                            array($worldFormat['worldX'], $worldFormat['worldY']),
-                            array($worldFormat['worldWidth'], $worldFormat['worldHeight']),
-                            array($worldFormat['pixelWidth'], $worldFormat['pixelHeight']));
-
-                        if (array_key_exists('label', $figure['style'])) {
-                            $xPos = $points[0][0];
-                            $yPos = $points[0][1];
-
-                            if (array_key_exists('labelXOffset', $figure['style'])) {
-                                $xPos += $figure['style']['labelXOffset'];
-                            }
-                            if (array_key_exists('labelYOffset', $figure['style'])) {
-                                $yPos += $figure['style']['labelYOffset'];
-                            }
-
-                            $img->drawLabel($xPos, $yPos, $color, $figure['style']['label'], 16,
-                                $figure['style']['labelAlign']);
-                        }
-                        $img->drawPoint($points[0][0], $points[0][1], $color, $figure['style']['pointRadius'],
-                            $figure['style']['fillOpacity']);
-
-                        break;
-                    case 'LineString':
-                        $points = $this->transformPoints($figure['coordinates'],
-                            array($worldFormat['worldX'], $worldFormat['worldY']),
-                            array($worldFormat['worldWidth'], $worldFormat['worldHeight']),
-                            array($worldFormat['pixelWidth'], $worldFormat['pixelHeight']));
-                        $img->drawOpenPolygon($points, $color, $figure['style']['strokeWidth']);
-                        break;
-                    //TODO MultiPoint, MultiLineString, MultiPolygon
-                    case 'MultiPolygon':
-                        break;
-                    case 'MultiLineString':
-                        break;
-                    case 'MultiPoint':
-                        break;
+        switch ($this->getGeometryType($feature)) {
+            case 'Polygon':
+                $pointArrays = array();
+                foreach ($geometry['coordinates'] as $pointArray) {
+                    array_push($pointArrays, $canvas->transformCoords($pointArray));
                 }
-            }
+                $canvas = $this->drawPolygon($canvas, $pointArrays, $style);
+                break;
+
+            case 'Point':
+                $points = $canvas->transformCoords(array($geometry['coordinates']));
+
+                if (array_key_exists('label', $style)) {
+                    $xPos = $points[0][0];
+                    $yPos = $points[0][1];
+
+                    if (array_key_exists('labelXOffset', $style)) {
+                        $xPos += $feature['style']['labelXOffset'];
+                    }
+                    if (array_key_exists('labelYOffset', $style)) {
+                        $yPos += $feature['style']['labelYOffset'];
+                    }
+
+                    $canvas = $this->drawLabel($canvas, array($xPos, $yPos), $style);
+                }
+                $canvas = $this->drawPoint($canvas, array($points[0][0], $points[0][1]), $style);
+                break;
+
+            case 'LineString':
+                $points = $canvas->transformCoords($geometry['coordinates']);
+                $canvas = $this->drawLineString($canvas, $points, $style);
+                break;
+
+            case 'MultiPolygon':
+                $polygonArrays = array();
+                foreach ($geometry['coordinates'] as $polygonArray) {
+                    $pointArrays = array();
+                    foreach ($polygonArray as $pointArray) {
+                        array_push($pointArrays, $canvas->transformCoords($pointArray));
+                    }
+                    array_push($polygonArrays, $canvas->transformCoords($pointArrays));
+                }
+                $canvas = $this->drawMultiPolygon($canvas, $polygonArrays, $style);
+                break;
+
+            case 'MultiLineString':
+                $pointArrays = array();
+                foreach ($geometry['coordinates'] as $pointArray) {
+                    array_push($pointArrays, $canvas->transformCoords($pointArray));
+
+                }
+                $canvas = $this->drawMultiLineString($canvas, $pointArrays, $style);
+                break;
+
+            case 'MultiPoint':
+                $pointArrays = array();
+                foreach ($geometry['coordinates'] as $pointArray) {
+                    array_push($pointArrays, $canvas->transformCoords($pointArray));
+                }
+                $canvas = $this->drawMultiPoint($canvas, $pointArrays, $style);
+                break;
         }
-        imagepng($img->getImage(), "test.png");
-        return $img;
+
+        return $canvas;
     }
 
-    private function transformPoints($points, $src_root, $src_size, $dest_size)
+    /*
+     * Functions that draw geometries onto a MapCanvas
+     */
+
+    public function drawPoint(MapCanvas $canvas, $coordinates, $style)
     {
-        $pixelPoints = array();
+        $img = $canvas->getImage();
+        $rgbColor = $this->getColor($style['strokeColor']);
 
-        foreach ($points as $point) {
-            $point[0] = round((($point[0] - $src_root[0]) / $src_size[0]) * $dest_size[0]);
-            $point[1] = $dest_size[1] - round((($point[1] - $src_root[1]) / $src_size[1]) * $dest_size[1]);
-            array_push($pixelPoints, $point);
-        }
-        return $pixelPoints;
+        $rgbStrokeColor = $this->getColor($style['strokeColor']);
+        $strokeColor = imagecolorallocatealpha($img, $rgbStrokeColor[0], $rgbStrokeColor[1], $rgbStrokeColor[2],
+            (1 - $style['strokeOpacity']) * 127);
+
+        $transp_color = imagecolorallocatealpha($img, $rgbColor[0], $rgbColor[1], $rgbColor[2],
+            (1 - $style['fillOpacity']) * 127);
+
+        imagefilledellipse($img, $coordinates[0], $coordinates[1], $style['pointRadius'] * 2,
+            $style['pointRadius'] * 2, $transp_color);
+        imageellipse($img, $coordinates[0], $coordinates[1], $style['pointRadius'] * 2,
+            $style['pointRadius'] * 2, $strokeColor);
+
+        $canvas->setImage($img);
+
+        return $canvas;
     }
 
-    private function getColor($colorstring)
+    public function drawPolygon(MapCanvas $canvas, $coordinates, $style)
+    {
+        $img = $canvas->getImage();
+
+        $rgbStrokeColor = $this->getColor($style['strokeColor']);
+        $strokeColor = imagecolorallocatealpha($img, $rgbStrokeColor[0], $rgbStrokeColor[1], $rgbStrokeColor[2],
+            (1 - $style['strokeOpacity']) * 127);
+
+        $rgbFillColor = $this->getColor($style['fillColor']);
+        $fillColor = imagecolorallocatealpha($img, $rgbFillColor[0], $rgbFillColor[1], $rgbFillColor[2],
+            (1 - $style['fillOpacity']) * 127);
+
+        $imgCache = imagecreatetruecolor(imagesx($img), imagesy($img));
+
+        imagecolortransparent($imgCache, 0);
+        imagefill($imgCache, 0, 0, 0);
+        imagealphablending($imgCache, false);
+        imagesavealpha($imgCache, true);
+        imagesetthickness($imgCache, $style['strokeWidth']);
+
+        foreach ($coordinates as $index => $pointArray) {
+            $num_points = sizeof($pointArray);
+
+            $points = array();
+            foreach ($pointArray as $point) {
+                array_push($points, $point[0]);
+                array_push($points, $point[1]);
+            }
+
+            if ($index == 0) {
+                imagefilledpolygon($imgCache, $points, $num_points, $fillColor);
+            } else {
+                imagefilledpolygon($imgCache, $points, $num_points, 0);
+            }
+
+            imagepolygon($imgCache, $points, $num_points, $strokeColor);
+        }
+
+        imagecopy($img, $imgCache, 0, 0, 0, 0, imagesx($img), imagesy($img));
+
+        $canvas->setImage($img);
+
+        return $canvas;
+    }
+
+    public function drawLineString(MapCanvas $canvas, $coordinates, $style)
+    {
+        $img = $canvas->getImage();
+
+        $rgbStrokeColor = $this->getColor($style['strokeColor']);
+        $color = imagecolorallocatealpha($img, $rgbStrokeColor[0], $rgbStrokeColor[1], $rgbStrokeColor[2],
+            (1 - $style['strokeOpacity']) * 127);
+
+        imagesetthickness($img, $style['strokeWidth']);
+
+        //craw lines for each pair of coordinates
+        for ($i = 0; $i < sizeof($coordinates) - 1; $i++) {
+            imageline($img, $coordinates[$i][0], $coordinates[$i][1], $coordinates[$i + 1][0],
+                $coordinates[$i + 1][1], $color);
+        }
+
+        $canvas->setImage($img);
+
+        return $canvas;
+    }
+
+    public function drawMultiPoint(MapCanvas $canvas, $coordinates, $style)
+    {
+        $img = $canvas->getImage();
+
+        foreach ($coordinates as $pointCoordinates) {
+            $img = $this->drawPoint($img, $pointCoordinates, $style);
+        }
+
+        $canvas->setImage($img);
+
+        return $canvas;
+    }
+
+    public function drawMultiPolygon(MapCanvas $canvas, $coordinates, $style)
+    {
+        $img = $canvas->getImage();
+
+        foreach ($coordinates as $polygonCoordinates) {
+            $img = $this->drawPolygon($img, $polygonCoordinates, $style);
+        }
+
+        $canvas->setImage($img);
+
+        return $canvas;
+    }
+
+    public function drawMultiLineString(MapCanvas $canvas, $coordinates, $style)
+    {
+        $img = $canvas->getImage();
+
+        foreach ($coordinates as $multiLineStringCoordinates) {
+            $img = $this->drawMultiLineString($img, $multiLineStringCoordinates, $style);
+        }
+
+        $canvas->setImage($img);
+
+        return $canvas;
+    }
+
+    public function drawLabel(MapCanvas $canvas, $coordinates, $style)
+    {
+        $img = $canvas->getImage();
+
+        $rgbStrokeColor = $this->getColor($style['strokeColor']);
+        $textColor = imagecolorallocatealpha($img, $rgbStrokeColor[0], $rgbStrokeColor[1], $rgbStrokeColor[2],
+            $style['strokeOpacity']);
+
+        //TODO: Diesen Kram woanders festlegen
+        //Textsize and font are never defined so they are hardcoded here
+        $textsize = 32;
+        $font = './components/open-sans/fonts/Bold/OpenSans-Bold.ttf';
+
+        $textBBarray = imageftbbox($textsize, 0, $font, $style['label']);
+
+        switch ($style['labelAlign']) {
+            case 'lt':
+                $coordinates[1] -= $textBBarray[7];
+                break;
+            case 'ct':
+                $coordinates[0] -= ($textBBarray[2] - $textBBarray[0]) / 2;
+                $coordinates[1] -= $textBBarray[7];
+                break;
+            case 'rt':
+                $coordinates[0] -= $textBBarray[2];
+                $coordinates[1] -= $textBBarray[7];
+                break;
+            case 'lm':
+                $coordinates[1] -= ($textBBarray[7] - $textBBarray[1]) / 2;
+                break;
+            case 'cm':
+                $coordinates[0] -= ($textBBarray[2] - $textBBarray[0]) / 2;
+                $coordinates[1] -= ($textBBarray[7] - $textBBarray[1]) / 2;
+                break;
+            case 'rm':
+                $coordinates[0] -= $textBBarray[2];
+                $coordinates[1] -= ($textBBarray[7] - $textBBarray[1]) / 2;
+                break;
+            case 'lb':
+                break;
+            case 'cb':
+                $coordinates[0] -= ($textBBarray[2] - $textBBarray[0]) / 2;
+                break;
+            case 'rb':
+                $coordinates[0] -= $textBBarray[2];
+                break;
+        }
+
+        imagettftext($img, $textsize, 0, $coordinates[0], $coordinates[1], $textColor, $font, $style['label']);
+
+        $canvas->setImage($img);
+
+        return $canvas;
+    }
+
+    /*
+     * Support functions for conversions
+     */
+
+    protected function getStyle($feature)
+    {
+        return $feature['properties'];
+    }
+
+    protected function getGeometryType($feature)
+    {
+        return $feature['geometry']['type'];
+    }
+
+    protected function getGeometry($feature)
+    {
+        return $feature['geometry'];
+    }
+
+    protected function getColor($colorstring)
     {
         if (substr($colorstring, 0, 1) == '#') {
             return $this->hexToRGB($colorstring);
@@ -146,7 +333,7 @@ class FeatureRenderer
 
     }
 
-    private function hexToRGB($hex)
+    protected function hexToRGB($hex)
     {
         $rgb = array();
         $rgb[0] = hexdec(substr($hex, 1, 2));
@@ -154,13 +341,6 @@ class FeatureRenderer
         $rgb[2] = hexdec(substr($hex, 5, 2));
 
         return $rgb;
-    }
-
-    public function rotate($center, $points)
-    {
-        $rotatedPoints = array();
-
-        return $rotatedPoints;
     }
 
 }

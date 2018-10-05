@@ -3,7 +3,7 @@
 namespace Wheregroup\MapExport\CoreBundle\Entity;
 
 
-class Canvas
+class MapCanvas
 {
     protected $image;
 
@@ -13,9 +13,29 @@ class Canvas
     protected $mapCenterX;
     protected $mapCenterY;
 
-    public function __construct($image)
+    public function __construct($width, $height, $mapWidth, $mapHeight, $mapCenterX, $mapCenterY)
     {
-        $this->image = $image;
+        $this->initImage($width, $height);
+        $this->mapWidth = $mapWidth;
+        $this->mapHeight = $mapHeight;
+        $this->mapCenterX = $mapCenterX;
+        $this->mapCenterY = $mapCenterY;
+
+    }
+
+    protected function initImage($width, $height)
+    {
+        /*if ($angle != 0) {
+            $newBB = $this->getBBOfRotatedImg($width, $height, $angle);
+            $width = $newBB[0];
+            $height = $newBB[1];
+        }*/
+
+        $this->image = @imagecreatetruecolor($width, $height)
+        or die("Can not create GD-Image");
+
+        $white = imagecolorallocate($this->image, 255, 255, 255);
+        imagefill($this->image, 0, 0, $white);
 
     }
 

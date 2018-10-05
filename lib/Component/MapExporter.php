@@ -1,24 +1,35 @@
 <?php
 
-namespace Wheregroup\PrintBundle\Component;
+namespace Wheregroup\MapExport\CoreBundle\Component;
 
-use Wheregroup\PrintBundle\Entity\Image;
+use Wheregroup\MapExport\CoreBundle\Entity\MapCanvas;
 
-class MapRenderer
+class MapExporter
 {
+    /**
+     * @var RasterRenderer
+     */
+    protected $RasterRenderer;
+
+    /**
+     * @var FeatureRenderer
+     */
+    protected $FeatureRenderer;
 
     protected static $instance = null;
 
-    public static function getInstance()
+    public static function getInstance($RasterRenderer, $FeatureRenderer)
     {
         if (null === self::$instance) {
-            self::$instance = new self;
+            self::$instance = new self($RasterRenderer, $FeatureRenderer);
         }
         return self::$instance;
     }
 
-    public function __construct()
+    public function __construct($RasterRenderer, $FeatureRenderer)
     {
+        $this->RasterRenderer = $RasterRenderer;
+        $this->FeatureRenderer = $FeatureRenderer;
     }
 
     //Prevents copies of instance
@@ -26,44 +37,34 @@ class MapRenderer
     {
     }
 
-    public function buildMap($data, $width, $height, $angle)
+    public function buildMap($data, $angle)
     {
-        $httpClient = new HTTPClient();
+        $width = $data['width'];
+        $height = $data['height'];
 
-        //Initialize image with possibly larger size to make up for space lost through rotation
-        $img = $this->initMap($width, $height, $angle);
+        //Initialize MapCanvas
+        $canvas = new MapCanvas($width, $height, $data['extentwidth'], $data['extentheight'], $data['centerx'], $data['centery']);
 
+        //Draw all WMS layers
+        foreach ($data['requests'] as $layer) {
+            $canvas = $this->RasterRenderer->drawLayer($canvas, $layer);
+        }
 
-        $this->drawLayers($img, $data, $httpClient);
-
-        $featureRenderer = FeatureRenderer::getInstance();
-        $worldformat = $featureRenderer->getWorldFormat($data['centerx'], $data['centery'], $data['extentwidth'],
-            $data['extentheight'], $data['width'], $data['height']);
-        $img = $featureRenderer->renderAll($img, $data['vectorLayers'], $worldformat);
+        //Draw each feature seperately
+        foreach ($data['vectorLayers'] as $feature) {
+            $canvas = $this->FeatureRenderer->drawFeature($canvas, $feature);
+        }
 
         //Rotate image back and crop
         if ($angle != 0) {
+            $img = $canvas->getImage();
             $this->finishMap($img, $width, $height, $angle);
+            $canvas->setImage($img);
         }
 
-        return $img->getImage();
-
+        return $canvas;
     }
 
-    /**
-     * @param Image $img
-     * @param $data
-     * @param $httpClient
-     */
-    private function drawLayers($img, $data, $httpClient)
-    {
-        $layers = $data['requests'];
-
-        foreach ($layers as $layer) {
-            $result = $httpClient->open($layer['url']);
-            $img->addLayer(imagecreatefromstring($result->getData()));
-        }
-    }
 
     private function getBBOfRotatedImg($width, $height, $angle)
     {
@@ -72,28 +73,13 @@ class MapRenderer
         return array($newWidth, $newHeight);
     }
 
-    private function initMap($width, $height, $angle)
-    {
-        /*if ($angle != 0) {
-            $newBB = $this->getBBOfRotatedImg($width, $height, $angle);
-            $width = $newBB[0];
-            $height = $newBB[1];
-        }*/
-        $img = new Image($width, $height);
-        return $img;
-
-    }
-
-    /**
-     * @param Image $img
-     * @param $width
-     * @param $height
-     * @param $angle
-     */
     private function finishMap($img, $width, $height, $angle)
     {
-        $img->rotate(-1 * $angle);
+        $img = imagerotate($img, $angle, 0);
+
         //$img->crop($width, $height);
+
+        return $img;
     }
 
 
