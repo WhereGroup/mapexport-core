@@ -50,10 +50,13 @@ class MapExporter
             $canvas = $this->RasterRenderer->drawLayer($canvas, $layer);
         }
 
-        //Draw each feature seperately
+        /*//Draw each feature seperately
         foreach ($data['vectorLayers'] as $feature) {
             $canvas = $this->FeatureRenderer->drawFeature($canvas, $feature);
-        }
+        }*/
+
+        //draw only the first entry in $data['vectorLayers'] because the second one is always empty and the third one contains polygons that can not exist (only two points)
+        $canvas = $this->FeatureRenderer->drawAllFeatures($canvas, $data['vectorLayers'][0]);
 
         //Rotate image back and crop
         if ($angle != 0) {

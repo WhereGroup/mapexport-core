@@ -8,22 +8,39 @@ class FeatureRenderer
 {
     protected static $instance = null;
 
-    public static function getInstance()
+    /**
+     * @var GeoJSONAdapter
+     */
+    protected $adapter;
+
+    public static function getInstance($adapter)
     {
         if (null === self::$instance) {
-            self::$instance = new self;
+            self::$instance = new self($adapter);
         }
         return self::$instance;
     }
 
-    //externe Instanzierung verbieten
-    public function __construct()
+    public function __construct($adapter)
     {
+        $this->adapter = $adapter;
     }
 
     //Kopieren von Instanzen verbieten
     protected function __clone()
     {
+    }
+
+    public function drawAllFeatures($canvas, $features)
+    {
+        $GeoJSONFeatures = $this->adapter->translateFromMBtoGeoJSON($features);
+
+        foreach ($GeoJSONFeatures as $feature) {
+            $canvas = $this->drawFeature($canvas, $feature);
+        }
+
+        return $canvas;
+
     }
 
     /**
@@ -55,10 +72,10 @@ class FeatureRenderer
                     $yPos = $points[0][1];
 
                     if (array_key_exists('labelXOffset', $style)) {
-                        $xPos += $feature['style']['labelXOffset'];
+                        $xPos += $style['labelXOffset'];
                     }
                     if (array_key_exists('labelYOffset', $style)) {
-                        $yPos += $feature['style']['labelYOffset'];
+                        $yPos += $style['labelYOffset'];
                     }
 
                     $canvas = $this->drawLabel($canvas, array($xPos, $yPos), $style);
