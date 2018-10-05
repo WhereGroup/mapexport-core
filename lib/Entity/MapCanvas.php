@@ -39,6 +39,13 @@ class MapCanvas
 
     }
 
+    /**
+     * Transforms real world coordinates into pixel coordinates
+     *
+     * @param $points array()   An array of points were each points x and y coordinate are stored in an own array
+     * @return array    pixel coordinates in same format as input
+     */
+
     public function transformCoords($points)
     {
 
@@ -55,6 +62,10 @@ class MapCanvas
         }
         return $pixelPoints;
     }
+
+    /*
+     * Getters and setters
+     */
 
     public function getWidth()
     {

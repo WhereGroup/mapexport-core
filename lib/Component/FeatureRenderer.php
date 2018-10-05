@@ -27,6 +27,8 @@ class FeatureRenderer
     }
 
     /**
+     * Determines the right draw method for a feature depending on its type
+     *
      * @param MapCanvas $canvas
      * @param $feature
      * @return mixed
@@ -225,7 +227,7 @@ class FeatureRenderer
         $img = $canvas->getImage();
 
         foreach ($coordinates as $multiLineStringCoordinates) {
-            $img = $this->drawMultiLineString($img, $multiLineStringCoordinates, $style);
+            $img = $this->drawLineString($img, $multiLineStringCoordinates, $style);
         }
 
         $canvas->setImage($img);
