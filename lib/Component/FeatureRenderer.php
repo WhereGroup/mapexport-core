@@ -31,12 +31,14 @@ class FeatureRenderer
     {
     }
 
-    public function drawAllFeatures($canvas, $features)
+    public function drawAllFeatures($canvas, $featurelist)
     {
-        $GeoJSONFeatures = $this->adapter->translateFromMBtoGeoJSON($features);
+        foreach ($featurelist as $features) {
+            $GeoJSONFeatures = $this->adapter->translateToGeoJSON($features);
 
-        foreach ($GeoJSONFeatures as $feature) {
-            $canvas = $this->drawFeature($canvas, $feature);
+            foreach ($GeoJSONFeatures as $feature) {
+                $canvas = $this->drawFeature($canvas, $feature);
+            }
         }
 
         return $canvas;
@@ -52,6 +54,8 @@ class FeatureRenderer
      */
     public function drawFeature($canvas, $feature)
     {
+
+
         $geometry = $this->getGeometry($feature);
         $style = $this->getStyle($feature);
 
@@ -149,6 +153,13 @@ class FeatureRenderer
 
     public function drawPolygon(MapCanvas $canvas, $coordinates, $style)
     {
+        //ignore polygons with less than three points
+        foreach ($coordinates as $polyCoords) {
+            if (count($polyCoords) < 3) {
+                return $canvas;
+            }
+        }
+
         $img = $canvas->getImage();
 
         $rgbStrokeColor = $this->getColor($style['strokeColor']);
@@ -262,7 +273,7 @@ class FeatureRenderer
 
         //TODO: Diesen Kram woanders festlegen
         //Textsize and font are never defined so they are hardcoded here
-        $textsize = 32;
+        $textsize = 20;
         $font = './components/open-sans/fonts/Bold/OpenSans-Bold.ttf';
 
         $textBBarray = imageftbbox($textsize, 0, $font, $style['label']);

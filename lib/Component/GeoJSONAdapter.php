@@ -2,18 +2,18 @@
 
 namespace Wheregroup\MapExport\CoreBundle\Component;
 
-
 class GeoJSONAdapter
 {
 
     protected $style;
     protected $geometry;
 
-    public function translateFromMBtoGeoJSON($data)
+    public function translateToGeoJSON($data)
     {
         $vectorLayers = array();
 
         $data = json_decode($data, true);
+
 
         foreach ($data['geometries'] as $geometry) {
             array_push($vectorLayers, array(

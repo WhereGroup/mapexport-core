@@ -43,20 +43,14 @@ class MapExporter
         $height = $data['height'];
 
         //Initialize MapCanvas
-        $canvas = new MapCanvas($width, $height, $data['extentwidth'], $data['extentheight'], $data['centerx'], $data['centery']);
+        $canvas = new MapCanvas($width, $height, $data['extentwidth'], $data['extentheight'], $data['centerx'],
+            $data['centery']);
 
-        //Draw all WMS layers
-        foreach ($data['requests'] as $layer) {
-            $canvas = $this->RasterRenderer->drawLayer($canvas, $layer);
-        }
+        //Draw wms layers
+        $canvas = $this->RasterRenderer->drawAllLayers($canvas, $data);
 
-        /*//Draw each feature seperately
-        foreach ($data['vectorLayers'] as $feature) {
-            $canvas = $this->FeatureRenderer->drawFeature($canvas, $feature);
-        }*/
-
-        //draw only the first entry in $data['vectorLayers'] because the second one is always empty and the third one contains polygons that can not exist (only two points)
-        $canvas = $this->FeatureRenderer->drawAllFeatures($canvas, $data['vectorLayers'][0]);
+        //Draw features
+        $canvas = $this->FeatureRenderer->drawAllFeatures($canvas, $data['vectorLayers']);
 
         //Rotate image back and crop
         if ($angle != 0) {
