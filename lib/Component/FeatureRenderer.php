@@ -337,6 +337,12 @@ class FeatureRenderer
         return $feature['geometry'];
     }
 
+    /**
+     * Converts hex colors and some color strings into arrays of r, g and b values
+     *
+     * @param $colorstring
+     * @return array
+     */
     protected function getColor($colorstring)
     {
         if (substr($colorstring, 0, 1) == '#') {
@@ -363,6 +369,12 @@ class FeatureRenderer
 
     }
 
+    /**
+     * Returns an array filled with the r, g and b value of a hex color
+     *
+     * @param $hex
+     * @return array
+     */
     protected function hexToRGB($hex)
     {
         $rgb = array();

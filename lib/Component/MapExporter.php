@@ -62,7 +62,14 @@ class MapExporter
         return $canvas;
     }
 
-
+    /**
+     * Calculate minimal bounding box of rotated image
+     *
+     * @param $width
+     * @param $height
+     * @param $angle
+     * @return array
+     */
     private function getBBOfRotatedImg($width, $height, $angle)
     {
         $newWidth = round(abs(sin(deg2rad($angle)) * $height + cos(deg2rad($angle)) * $width));
@@ -70,6 +77,15 @@ class MapExporter
         return array($newWidth, $newHeight);
     }
 
+    /**
+     * Crop and rotate the image
+     *
+     * @param $img
+     * @param $width
+     * @param $height
+     * @param $angle
+     * @return resource
+     */
     private function finishMap($img, $width, $height, $angle)
     {
         $img = imagerotate($img, $angle, 0);
