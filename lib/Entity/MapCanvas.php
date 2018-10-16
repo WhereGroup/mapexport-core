@@ -86,4 +86,15 @@ class MapCanvas
     {
         $this->image = $image;
     }
+
+    public function getBB()
+    {
+        $BB = array();
+        $BB[0] = $this->mapCenterX - ($this->mapWidth / 2);
+        $BB[1] = $this->mapCenterY - ($this->mapHeight / 2);
+        $BB[2] = $this->mapCenterY + ($this->mapHeight / 2);
+        $BB[3] = $this->mapCenterY + ($this->mapHeight / 2);
+
+        return $BB;
+    }
 }
