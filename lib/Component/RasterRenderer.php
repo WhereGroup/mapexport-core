@@ -45,7 +45,7 @@ class RasterRenderer
             $canvasBB = $canvas->getBB();
 
             $x = round($imageWidth * (($BB[0] - $canvasBB[0]) / ($BB[2] - $BB[0])));
-            $y = $this->getHeightFromURL($layer['url']) - round($imageHeight * (($BB[1] - $canvasBB[1]) / ($BB[3] - $BB[1])));
+            $y = $canvas->getHeight() - round($imageHeight * (($BB[1] - $canvasBB[1]) / ($BB[3] - $BB[1]))) - $this->getHeightFromURL($layer['url']);
 
             //draw layer on canvas
             imagecopy($img, $layerImage, $x, $y, 0, 0, $imageWidth, $imageHeight);
