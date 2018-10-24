@@ -97,15 +97,21 @@ class RasterRenderer
      * Draws all returned images of wms requests on a MapCanvas
      *
      * @param MapCanvas $canvas
-     * @param $data
-     * @return MapCanvas
+     * @param $requests
+     * @param $location
+     * @param $width
+     * @param $height
+     * @return mixed|MapCanvas
      */
-    public function drawAllLayers(MapCanvas $canvas, $data)
+    public function drawAllLayers(MapCanvas $canvas, $requests, $location, $width, $height)
     {
-        //draw each requested layer
-        foreach ($data['requests'] as $layer) {
-            $layer['url'] = $this->getWMS($layer['url'], $data['width'], $data['height'], $this->getBB($data));
-            $canvas = ($this->drawLayer($canvas, $layer));
+
+        foreach ($requests as $layer) {
+            //Filter for wms requests only
+            if (isset($layer['url'])) {
+                $layer['url'] = $this->getWMS($layer['url'], $width, $height, $this->getBB($location));
+                $canvas = ($this->drawLayer($canvas, $layer));
+            }
         }
 
         return $canvas;
@@ -177,7 +183,7 @@ class RasterRenderer
     }
 
     /**
-     * Takes a WMS URL and splits it into $cols x $rows smaller requests (default: 2 x 2)
+     * Takes a WMS URL and splits it into $cols x $rows of smaller requests (default: 2 x 2)
      *
      * @param $url
      * @param int $cols
@@ -222,7 +228,7 @@ class RasterRenderer
     }
 
     /**
-     * Splits bounding box into array of $cols x $rows bounding boxes (default: 2 x 2)
+     * Splits bounding box into array of $cols x $rows of bounding boxes (default: 2 x 2)
      *
      * @param $BB
      * @param int $cols
@@ -262,16 +268,40 @@ class RasterRenderer
     /**
      * Returns the bounding box that is defined by the center coordinates and extent values in $data
      *
-     * @param $data
+     * @param $location
      * @return array
      */
-    public function getBB($data)
+    public function getBB($location)
     {
+        if (isset($location['extentwidth'])) {
+            $extentwidth = $location['extentwidth'];
+        } else {
+            $extentwidth = $location['extent']['width'];
+        }
+
+        if (isset($location['extentheight'])) {
+            $extentheight = $location['extentheight'];
+        } else {
+            $extentheight = $location['extent']['height'];
+        }
+
+        if (isset($location['centerx'])) {
+            $centerx = $location['centerx'];
+        } else {
+            $centerx = $location['center']['x'];
+        }
+
+        if (isset($location['centery'])) {
+            $centery = $location['centery'];
+        } else {
+            $centery = $location['center']['y'];
+        }
+
         $BB = array();
-        array_push($BB, $data['centerx'] - $data['extentwidth'] / 2);
-        array_push($BB, $data['centery'] - $data['extentheight'] / 2);
-        array_push($BB, $data['centerx'] + $data['extentwidth'] / 2);
-        array_push($BB, $data['centery'] + $data['extentheight'] / 2);
+        array_push($BB, $centerx - $extentwidth / 2);
+        array_push($BB, $centery - $extentheight / 2);
+        array_push($BB, $centerx + $extentwidth / 2);
+        array_push($BB, $centery + $extentheight / 2);
 
         return $BB;
     }
