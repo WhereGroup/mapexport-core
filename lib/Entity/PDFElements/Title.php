@@ -11,20 +11,16 @@ class Title extends PDFElement
 
     protected function init()
     {
-        //$this->getStyle($this->data['template']);
         $this->title = $this->data['extra']['title'];
-
-    }
-
-    protected function getStyle()
-    {
-        //TODO get stile with new ODG parser
     }
 
     public function draw()
     {
-        $this->pdf->SetFont('Arial');
-        $this->pdf->Text($this->x, $this->y, $this->title);
+        $this->pdf->SetFont($this->font);
+        $this->pdf->SetTextColor($this->textColor['r'], $this->textColor['g'], $this->textColor['b']);
+        $this->pdf->SetFontSize($this->fontSize);
 
+        $this->pdf->SetXY($this->x, $this->y);
+        $this->pdf->Cell($this->width, $this->height, $this->title);
     }
 }

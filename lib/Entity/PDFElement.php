@@ -21,7 +21,11 @@ abstract class PDFElement
 
     protected $data;
 
-    public function __construct(&$pdf, $x, $y, $width, $height, $data)
+    protected $font = 'Arial';
+    protected $fontSize = '14pt';
+    protected $textColor = array('r' => 0, 'g' => 0, 'b' => 0);
+
+    public function __construct(&$pdf, $x, $y, $width, $height, $data, $style = null)
     {
         $this->pdf = $pdf;
 
@@ -33,7 +37,18 @@ abstract class PDFElement
 
         $this->data = $data;
 
+        //set Style
+        $this->fontSize = $style['fontSize'];
+        $this->textColor = $style['textColor'];
+
         $this->init();
+    }
+
+    public function setStyle($font, $fontSize, $textColor){
+        $this->font = $font;
+        $this->fontSize = $fontSize;
+        $this->textColor = $textColor;
+
     }
 
     public function draw()

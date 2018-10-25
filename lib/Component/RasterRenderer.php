@@ -7,7 +7,8 @@ use Wheregroup\MapExport\CoreBundle\Entity\MapCanvas;
 
 class RasterRenderer
 {
-    const MAX_REQUEST_SIZE = 262144; //512x512 Pixel
+    //const MAX_REQUEST_SIZE = 262144; //512x512 Pixel
+    const MAX_REQUEST_SIZE = null; //max request size switched off
 
     protected $httpClient;
 
@@ -33,7 +34,7 @@ class RasterRenderer
         $imageHeight = $this->getHeightFromURL($layer['url']);
 
         //test if image is too large and should be tiled
-        if ($imageWidth * $imageHeight > self::MAX_REQUEST_SIZE) {
+        if ($imageWidth * $imageHeight > self::MAX_REQUEST_SIZE && self::MAX_REQUEST_SIZE != null) {
             //If image is too large, split it
             $canvas = $this->drawTiledLayer($canvas, $layer);
         } else {

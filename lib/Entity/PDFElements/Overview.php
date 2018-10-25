@@ -18,15 +18,23 @@ class Overview extends Map
         //Build new $data array
         $data = array();
         //Imagesize
-        $data['rotation'] = $this->data['rotation'];
+        //$data['rotation'] = $this->data['rotation'];
         $data['width'] = $this->width;
         $data['height'] = $this->height;
+
         $data['format'] = 'png';
+        $data['quality'] = $this->data['quality'];
+
         $data['centerx'] = $this->data['center']['x'];
         $data['centery'] = $this->data['center']['y'];
 
         $data['extentwidth'] = $this->data['extent']['width'] * 2;
         $data['extentheight'] = $this->data['extent']['height'] * 2;
+
+
+        //TODO Overview Ausschnitt bestimmen
+        //$data['extentwidth'] = $this->width * $this->data['overview'][0]['scale'] / 1000;
+        //$data['extentheight'] = $this->height * $this->data['overview'][0]['scale'] / 1000;
 
 
         //WMS service gets overlay

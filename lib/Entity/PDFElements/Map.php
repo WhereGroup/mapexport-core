@@ -22,8 +22,11 @@ class Map extends PDFElement
     public function draw()
     {
 
-        $map=$this->mapExporter->buildMap($this->data, $this->width*10, $this->height*10);
-        $this->img=$map->getImage();
+        $width = round($this->width / 25.4 * $this->data['quality']);
+        $height = round($this->height / 25.4 * $this->data['quality']);
+
+        $map = $this->mapExporter->buildMap($this->data, $width, $height);
+        $this->img = $map->getImage();
 
         //$this->img = $this->mapExporter->buildMap($this->data, $this->width, $this->height)->getImage();
 

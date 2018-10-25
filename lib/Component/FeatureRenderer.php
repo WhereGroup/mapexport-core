@@ -8,22 +8,16 @@ class FeatureRenderer
 {
     protected static $instance = null;
 
-    /**
-     * @var GeoJSONAdapter
-     */
-    protected $adapter;
-
-    public static function getInstance($adapter)
+    public static function getInstance()
     {
         if (null === self::$instance) {
-            self::$instance = new self($adapter);
+            self::$instance = new self();
         }
         return self::$instance;
     }
 
-    public function __construct($adapter)
+    public function __construct()
     {
-        $this->adapter = $adapter;
     }
 
     //Kopieren von Instanzen verbieten
@@ -31,14 +25,10 @@ class FeatureRenderer
     {
     }
 
-    public function drawAllFeatures($canvas, $featurelist)
+    public function drawAllFeatures($canvas, $features)
     {
-        foreach ($featurelist as $features) {
-            $GeoJSONFeatures = $this->adapter->translateToGeoJSON($features);
-
-            foreach ($GeoJSONFeatures as $feature) {
-                $canvas = $this->drawFeature($canvas, $feature);
-            }
+        foreach ($features as $feature) {
+            $canvas = $this->drawFeature($canvas, $feature);
         }
 
         return $canvas;

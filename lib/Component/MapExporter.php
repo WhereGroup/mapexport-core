@@ -39,50 +39,31 @@ class MapExporter
 
     public function buildMap($data, $width = null, $height = null)
     {
-        if ($width == null && isset($data['width'])) {
-            $width = $data['width'];
+        $mapData = new MapData();
+        $mapData->fillFromGeoJSON($data);
+
+        if ($width == null) {
+            $width = $mapData->getWidth();
+        }
+        if ($height == null) {
+            $height = $mapData->getHeight();
         }
 
-        if ($height == null && isset($data['height'])) {
-            $height = $data['height'];
-        }
-
-        if (isset($data['rotation'])) {
-            $angle = $data['rotation'];
+        if ($mapData->getRotation() != null) {
+            $angle = $mapData->getRotation();
         } else {
             $angle = 0;
         }
 
-        if (isset($data['extentheight'])) {
-            $extentheight = $data['extentheight'];
-        } else {
-            $extentheight = $data['extent']['height'];
-        }
+        $extentheight = $mapData->getExtentHeight();
 
         //If aspect ratio of bounding box and image don't match, make bounding box wider
         $extentwidth = $extentheight * ($width / $height);
 
-        /*if (isset($data['extentwidth'])) {
-            $extentwidth = $data['extentwidth'];
-        } else {
-            $extentwidth = $data['extent']['width'];
-        }*/
-
-        if (isset($data['centerx'])) {
-            $centerx = $data['centerx'];
-        } else {
-            $centerx = $data['center']['x'];
-        }
-
-        if (isset($data['centery'])) {
-            $centery = $data['centery'];
-        } else {
-            $centery = $data['center']['y'];
-        }
+        $centerx = $mapData->getCenterX();
+        $centery = $mapData->getCenterY();
 
         $location = array(
-            'width' => $width,
-            'height' => $height,
             'extentwidth' => $extentwidth,
             'extentheight' => $extentheight,
             'centerx' => $centerx,
@@ -92,39 +73,12 @@ class MapExporter
         //Initialize MapCanvas
         $canvas = new MapCanvas($width, $height, $extentwidth, $extentheight, $centerx, $centery);
 
-        if (isset($data['requests']) || array_key_exists('requests', $data)) {
-            $requests = $data['requests'];
-        } elseif (isset($data['layers']) || array_key_exists('layers', $data)) {
-            //Separate wms requests from features
-            $requests = array();
-            foreach ($data['layers'] as $layer) {
-                if ($layer['type'] == 'wms') {
-                    array_push($requests, $layer);
-                }
-            }
-        } else {
-            $requests = null;
-        }
-
         //Draw wms layers
+        $requests = $mapData->getLayers();
         $canvas = $this->RasterRenderer->drawAllLayers($canvas, $requests, $location, $width, $height);
 
-        //Get features from $data
-        if (isset($data['vectorLayers']) || array_key_exists('vectorLayers', $data)) {
-            $features = $data['vectorLayers'];
-        } elseif (isset($data['layers']) || array_key_exists('layers', $data)) {
-            //Separate features from wms requests
-            $features = array();
-            foreach ($data['layers'] as $layer) {
-                if ($layer['type'] == 'GeoJSON+Style') {
-                    array_push($features, $layer);
-                }
-            }
-
-            //$features = $data['layers'];
-        }
-
         //Draw features
+        $features = $mapData->getFeatures();
         if (isset($features)) {
             $canvas = $this->FeatureRenderer->drawAllFeatures($canvas, $features);
         }

@@ -31,7 +31,7 @@ class PDFPage
         $this->data = $data;
     }
 
-    public function addElement(\DOMElement $xml)
+    public function addElement(\DOMElement $xml, $style = null)
     {
         $name = $xml->getAttribute('draw:name');
         $x = $xml->getAttribute('svg:x');
@@ -56,27 +56,20 @@ class PDFPage
                 array_push($this->elements, new Scalebar($this->pdf, $x, $y, $width, $height, $this->data));
                 break;
             case 'date':
-                array_push($this->elements, new Date($this->pdf, $x, $y, $width, $height, $this->data));
+                array_push($this->elements, new Date($this->pdf, $x, $y, $width, $height, $this->data, $style));
                 break;
             case 'title':
-                array_push($this->elements, new Title($this->pdf, $x, $y, $width, $height, $this->data));
+                array_push($this->elements, new Title($this->pdf, $x, $y, $width, $height, $this->data, $style));
                 break;
             case 'scale':
-                array_push($this->elements, new Scale($this->pdf, $x, $y, $width, $height, $this->data));
+                array_push($this->elements, new Scale($this->pdf, $x, $y, $width, $height, $this->data, $style));
                 break;
             default:
                 //var_dump($name);
         }
 
 
-        if (class_exists($xml->getAttribute('draw:name'))) {
-            $x = (substr($xml->getAttribute('svg:x'), 0, -2));
-            $y = (substr($xml->getAttribute('svg:y'), 0, -2));
-            $width = (substr($xml->getAttribute('svg:width'), 0, -2));
-            $height = (substr($xml->getAttribute('svg:height'), 0, -2));
-            $element = new $name($this->pdf, $x, $y, $width, $height, $this->data);
-            array_push($this->elements, $element);
-        }
+
     }
 
     public function getPDFPage()
