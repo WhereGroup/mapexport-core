@@ -6,25 +6,6 @@ use Wheregroup\MapExport\CoreBundle\Entity\MapCanvas;
 
 class FeatureRenderer
 {
-    protected static $instance = null;
-
-    public static function getInstance()
-    {
-        if (null === self::$instance) {
-            self::$instance = new self();
-        }
-        return self::$instance;
-    }
-
-    public function __construct()
-    {
-    }
-
-    //Kopieren von Instanzen verbieten
-    protected function __clone()
-    {
-    }
-
     public function drawAllFeatures($canvas, $features)
     {
         foreach ($features as $feature) {

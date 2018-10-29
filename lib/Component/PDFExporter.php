@@ -14,14 +14,17 @@ class PDFExporter
 {
     public function createPDFFromTemplate($data)
     {
+        $odgParser = new OdgParser();
+
         //TODO: Find a better solution for fixed template location
         $templatePath = './MapbenderPrintBundle/templates/' . $data['template'];
 
+        $conf = $odgParser->getConf($templatePath . '.odg');
+        //$pdf = new FPDI($conf['orientation'], 'cm', 'A4');
         $pdf = new FPDI();
 
-        $pdfPage = new PDFPage($pdf, $data);
+        $pdfPage = new PDFPage($pdf, $data, $conf);
 
-        $odgParser = new OdgParser();
         $odgParser->getElements($pdfPage, $templatePath . '.odg');
 
 

@@ -16,25 +16,10 @@ class MapExporter
      */
     protected $FeatureRenderer;
 
-    protected static $instance = null;
-
-    public static function getInstance($RasterRenderer, $FeatureRenderer)
-    {
-        if (null === self::$instance) {
-            self::$instance = new self($RasterRenderer, $FeatureRenderer);
-        }
-        return self::$instance;
-    }
-
     public function __construct($RasterRenderer, $FeatureRenderer)
     {
         $this->RasterRenderer = $RasterRenderer;
         $this->FeatureRenderer = $FeatureRenderer;
-    }
-
-    //Prevents copies of instance
-    protected function __clone()
-    {
     }
 
     public function buildMap($data, $width = null, $height = null)
@@ -63,19 +48,28 @@ class MapExporter
         $centerx = $mapData->getCenterX();
         $centery = $mapData->getCenterY();
 
+        //Set scale for resizing rotated image
+        $widthScale = 1;
+        $heightScale = 1;
+        if($angle != 0){
+            $scaleArray = $this->getBBOfRotatedImg($extentwidth, $extentheight, $angle);
+            $widthScale = $scaleArray[0];
+            $heightScale = $scaleArray[1];
+        }
+
         $location = array(
-            'extentwidth' => $extentwidth,
-            'extentheight' => $extentheight,
+            'extentwidth' => $extentwidth*$widthScale,
+            'extentheight' => $extentheight*$heightScale,
             'centerx' => $centerx,
             'centery' => $centery
         );
 
         //Initialize MapCanvas
-        $canvas = new MapCanvas($width, $height, $extentwidth, $extentheight, $centerx, $centery);
+        $canvas = new MapCanvas(round($width*$widthScale), round($height*$heightScale), $extentwidth*$widthScale, $extentheight*$heightScale, $centerx, $centery);
 
         //Draw wms layers
         $requests = $mapData->getLayers();
-        $canvas = $this->RasterRenderer->drawAllLayers($canvas, $requests, $location, $width, $height);
+        $canvas = $this->RasterRenderer->drawAllLayers($canvas, $requests, $location, round($width*$widthScale), round($height*$heightScale));
 
         //Draw features
         $features = $mapData->getFeatures();
@@ -86,7 +80,7 @@ class MapExporter
         //Rotate image back and crop
         if ($angle != 0) {
             $img = $canvas->getImage();
-            $this->finishMap($img, $width, $height, $angle);
+            $img = $this->rotateMap($img, $width, $height, $angle);
             $canvas->setImage($img);
         }
 
@@ -103,9 +97,9 @@ class MapExporter
      */
     private function getBBOfRotatedImg($width, $height, $angle)
     {
-        $newWidth = round(abs(sin(deg2rad($angle)) * $height + cos(deg2rad($angle)) * $width));
-        $newHeight = round(abs(cos(deg2rad($angle)) * $height + sin(deg2rad($angle)) * $width));
-        return array($newWidth, $newHeight);
+        $newWidth = round(abs(sin(deg2rad($angle)) * $height) + abs(cos(deg2rad($angle)) * $width));
+        $newHeight = round(abs(cos(deg2rad($angle)) * $height) + abs(sin(deg2rad($angle)) * $width));
+        return array($newWidth/$width, $newHeight/$height);
     }
 
     /**
@@ -117,12 +111,18 @@ class MapExporter
      * @param $angle
      * @return resource
      */
-    private function finishMap($img, $width, $height, $angle)
+    private function rotateMap($img, $width, $height, $angle)
     {
+        //rotate image
         $img = imagerotate($img, $angle, 0);
 
-        //$img->crop($width, $height);
-
+        //crop image
+        $img = imagecrop($img, array(
+            'x' => (imagesx($img) - $width) / 2,
+            'y' => (imagesy($img) - $height) / 2,
+            'width' => $width,
+            'height' => $height
+        ));
         return $img;
     }
 

@@ -18,6 +18,7 @@ class OdgParser
         $opened = zip_open($odgFile);
         $xmlString = null;
 
+        //TODO Set location for templates
         //Go through content of archive and return content of the requested xml file
         while ($zipEntry = zip_read($opened)) {
             if (zip_entry_name($zipEntry) == $file) {
@@ -37,6 +38,25 @@ class OdgParser
 
     }
 
+    public function getConf($template)
+    {
+
+        $doc = $this->getXML($template, 'styles.xml');
+        $xPath = new \DOMXPath($doc);
+        $node = $xPath->query("//style:page-layout-properties");
+        $pageGeometry = $node->item(0);
+        $conf = array(
+            'orientation' => ucwords($pageGeometry->getAttribute('style:print-orientation')),
+            'pageSize' => array(
+                'height' => $pageGeometry->getAttribute('fo:page-height'),
+                'width' => $pageGeometry->getAttribute('fo:page-width')
+            ),
+            'fields' => array()
+        );
+
+        return $conf;
+    }
+
     public function getElements(PDFPage &$pdfPage, $path)
     {
 
@@ -44,8 +64,6 @@ class OdgParser
         $xpath = new \DOMXPath($doc);
 
         $elements = $xpath->query('//draw:page');
-        //$size = $elements->length;
-        $size = 7;
 
         $elementNEW = $elements->item(0)->firstChild;
 
@@ -54,11 +72,12 @@ class OdgParser
             $pdfPage->addElement($elementNEW);
         }
 
-        for ($i = 0; $i <= $size; $i++) {
+        //for ($i = 0; $i <= $size; $i++) {
+        while($elementNEW != null){
             $elementOLD = $elementNEW;
             $elementNEW = $elementOLD->nextSibling;
 
-            if ($elementNEW->hasAttribute('draw:name')) {
+            if ($elementNEW != null && $elementNEW->hasAttribute('draw:name')) {
                 //now check if there is a style
                 $styleElement = $xpath->query('.//text:span', $elementNEW);
                 if ($styleElement->item(0) != null) {

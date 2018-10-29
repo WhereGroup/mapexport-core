@@ -38,13 +38,18 @@ abstract class PDFElement
         $this->data = $data;
 
         //set Style
-        $this->fontSize = $style['fontSize'];
-        $this->textColor = $style['textColor'];
+        if ($style['fontSize'] != null) {
+            $this->fontSize = $style['fontSize'];
+        }
+        if ($style['textColor'] != null) {
+            $this->textColor = $style['textColor'];
+        }
 
         $this->init();
     }
 
-    public function setStyle($font, $fontSize, $textColor){
+    public function setStyle($font, $fontSize, $textColor)
+    {
         $this->font = $font;
         $this->fontSize = $fontSize;
         $this->textColor = $textColor;

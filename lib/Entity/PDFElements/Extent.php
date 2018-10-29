@@ -5,13 +5,15 @@ namespace Wheregroup\MapExport\CoreBundle\Entity\PDFElements;
 
 use Wheregroup\MapExport\CoreBundle\Entity\PDFElement;
 
-class Title extends PDFElement
+class Extent extends PDFElement
 {
-    protected $title;
+    protected $scale;
 
     protected function init()
     {
-        $this->title = $this->data['extra']['title'];
+        //$this->getStyle($this->data['template']);
+        $this->scale = $this->data['scale_select'];
+
     }
 
     public function draw()
@@ -21,6 +23,7 @@ class Title extends PDFElement
         $this->pdf->SetFontSize($this->fontSize);
 
         $this->pdf->SetXY($this->x-1, $this->y);
-        $this->pdf->Cell($this->width, $this->height, $this->title);
+        //$this->pdf->Cell($this->width, $this->height, 'Extent');
+
     }
 }

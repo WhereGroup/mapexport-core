@@ -50,7 +50,7 @@ class Map extends PDFElement
         if ($this->mapExporter == null) {
             $httpClient = new HTTPClient();
             $rasterRenderer = new RasterRenderer($httpClient);
-            $featureRenderer = new FeatureRenderer(new GeoJSONAdapter());
+            $featureRenderer = new FeatureRenderer();
             $this->mapExporter = new MapExporter($rasterRenderer, $featureRenderer);
         }
 

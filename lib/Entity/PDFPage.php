@@ -3,7 +3,9 @@
 namespace Wheregroup\MapExport\CoreBundle\Entity;
 
 
+use Wheregroup\MapExport\CoreBundle\Entity\PDFElements\Comment;
 use Wheregroup\MapExport\CoreBundle\Entity\PDFElements\Date;
+use Wheregroup\MapExport\CoreBundle\Entity\PDFElements\Extent;
 use Wheregroup\MapExport\CoreBundle\Entity\PDFElements\Map;
 use Wheregroup\MapExport\CoreBundle\Entity\PDFElements\Northarrow;
 use Wheregroup\MapExport\CoreBundle\Entity\PDFElements\Overview;
@@ -18,11 +20,11 @@ class PDFPage
 
     protected $elements = array();
 
-    public function __construct(&$pdf, $data)
+    public function __construct(&$pdf, $data, $conf)
     {
         $templatePath = './MapbenderPrintBundle/templates/' . $data['template'];
 
-        $pdf->AddPage();
+        $pdf->AddPage($conf['orientation'], array($conf['pageSize']['width']*10, $conf['pageSize']['height']*10));
         $pdf->setSourceFile($templatePath . '.pdf');
         $page = $pdf->importPage(1);
         $pdf->useTemplate($page);
@@ -40,8 +42,6 @@ class PDFPage
         $height = $xml->getAttribute('svg:height');
 
         //Find out if there is a fitting class and add element to list
-
-        //TODO Switch austauschen
         switch ($name) {
             case 'northarrow':
                 array_push($this->elements, new Northarrow($this->pdf, $x, $y, $width, $height, $this->data));
@@ -64,8 +64,18 @@ class PDFPage
             case 'scale':
                 array_push($this->elements, new Scale($this->pdf, $x, $y, $width, $height, $this->data, $style));
                 break;
+            case 'extent_ll_x':
+            case 'extent_ll_y':
+            case 'extent_ur_x':
+            case 'extent_ur_y':
+                array_push($this->elements, new Extent($this->pdf, $x, $y, $width, $height, $this->data, $style));
+                break;
             default:
-                //var_dump($name);
+                if (strpos( $name, 'comment')!==false){
+                    array_push($this->elements, new Comment($this->pdf, $x, $y, $width, $height, $this->data, $name, $style));
+                    break;
+                }
+            //var_dump($name);
         }
 
 

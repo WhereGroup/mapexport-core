@@ -33,8 +33,13 @@ class Northarrow extends PDFElement
     private function rotate()
     {
         $northArrowImage = imagecreatefrompng(self::northArrowImage);
-        $width = imagesx($northArrowImage);
-        $height = imagesy($northArrowImage);
+        if (($this->rotation > 45 && $this->rotation < 135) || ($this->rotation > 225 && $this->rotation < 315)) {
+            $height = imagesx($northArrowImage);
+            $width = imagesy($northArrowImage);
+        } else {
+            $width = imagesx($northArrowImage);
+            $height = imagesy($northArrowImage);
+        }
 
         //Background of compass rose is NOT transparent. I think it should be. But since it isn't, the background color value of rotateimage has to be the same as the images background color or there would be ugly lines after rotation
         //$pngTransparency = imagecolorallocatealpha($northArrowImage , 0, 0, 0, 127);

@@ -21,7 +21,7 @@ class Scale extends PDFElement
         $this->pdf->SetTextColor($this->textColor['r'], $this->textColor['g'], $this->textColor['b']);
         $this->pdf->SetFontSize($this->fontSize);
 
-        $this->pdf->SetXY($this->x, $this->y);
+        $this->pdf->SetXY($this->x-1, $this->y);
         $this->pdf->Cell($this->width, $this->height, '1 : '.$this->scale);
 
     }
