@@ -3,6 +3,7 @@
 namespace Wheregroup\MapExport\CoreBundle\Entity;
 
 
+use Wheregroup\MapExport\CoreBundle\Component\PDF_Extensions;
 use Wheregroup\MapExport\CoreBundle\Entity\PDFElements\Comment;
 use Wheregroup\MapExport\CoreBundle\Entity\PDFElements\Date;
 use Wheregroup\MapExport\CoreBundle\Entity\PDFElements\Extent;
@@ -16,15 +17,16 @@ use Wheregroup\MapExport\CoreBundle\Entity\PDFElements\Title;
 class PDFPage
 {
     protected $pdf;
+
     protected $data;
 
     protected $elements = array();
 
-    public function __construct(&$pdf, $data, $conf)
+    public function __construct(PDF_Extensions &$pdf, $data, $conf)
     {
         $templatePath = './MapbenderPrintBundle/templates/' . $data['template'];
 
-        $pdf->AddPage($conf['orientation'], array($conf['pageSize']['width']*10, $conf['pageSize']['height']*10));
+        $pdf->AddPage($conf['orientation'], array($conf['pageSize']['width'] * 10, $conf['pageSize']['height'] * 10));
         $pdf->setSourceFile($templatePath . '.pdf');
         $page = $pdf->importPage(1);
         $pdf->useTemplate($page);
@@ -68,16 +70,17 @@ class PDFPage
             case 'extent_ll_y':
             case 'extent_ur_x':
             case 'extent_ur_y':
-                array_push($this->elements, new Extent($this->pdf, $x, $y, $width, $height, $this->data, $style));
+                array_push($this->elements,
+                    new Extent($this->pdf, $x, $y, $width, $height, $this->data, $name, $style));
                 break;
             default:
-                if (strpos( $name, 'comment')!==false){
-                    array_push($this->elements, new Comment($this->pdf, $x, $y, $width, $height, $this->data, $name, $style));
+                if (strpos($name, 'comment') !== false) {
+                    array_push($this->elements,
+                        new Comment($this->pdf, $x, $y, $width, $height, $this->data, $name, $style));
                     break;
                 }
             //var_dump($name);
         }
-
 
 
     }

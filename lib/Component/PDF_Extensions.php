@@ -1,6 +1,6 @@
 <?php
 
-namespace Wheregroup\PrintBundle\Component;
+namespace Wheregroup\MapExport\CoreBundle\Component;
 
 use FPDI;
 

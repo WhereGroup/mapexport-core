@@ -2,14 +2,14 @@
 
 namespace Wheregroup\MapExport\CoreBundle\Entity;
 
-use FPDF;
+use Wheregroup\MapExport\CoreBundle\Component\PDF_Extensions;
 
 abstract class PDFElement
 {
     const scale = 10;
 
     /**
-     * @var FPDF
+     * @var PDF_Extensions
      */
     protected $pdf;
 

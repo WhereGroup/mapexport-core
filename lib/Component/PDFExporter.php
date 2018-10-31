@@ -1,13 +1,7 @@
 <?php
-/**
- * User: sbrieden
- * Date: 22.10.18
- * Time: 12:27
- */
 
 namespace Wheregroup\MapExport\CoreBundle\Component;
 
-use FPDI;
 use Wheregroup\MapExport\CoreBundle\Entity\PDFPage;
 
 class PDFExporter
@@ -21,7 +15,7 @@ class PDFExporter
 
         $conf = $odgParser->getConf($templatePath . '.odg');
         //$pdf = new FPDI($conf['orientation'], 'cm', 'A4');
-        $pdf = new FPDI();
+        $pdf = new PDF_Extensions();
 
         $pdfPage = new PDFPage($pdf, $data, $conf);
 
