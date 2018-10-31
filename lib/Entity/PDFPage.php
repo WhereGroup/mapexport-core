@@ -30,6 +30,7 @@ class PDFPage
         $pdf->setSourceFile($templatePath . '.pdf');
         $page = $pdf->importPage(1);
         $pdf->useTemplate($page);
+        $pdf->SetAutoPageBreak(false);
 
         $this->pdf = &$pdf;
         $this->data = $data;
@@ -74,7 +75,7 @@ class PDFPage
                     new Extent($this->pdf, $x, $y, $width, $height, $this->data, $name, $style));
                 break;
             default:
-                if (strpos($name, 'comment') !== false) {
+                if (strpos($name, 'comment') === 0) {
                     array_push($this->elements,
                         new Comment($this->pdf, $x, $y, $width, $height, $this->data, $name, $style));
                     break;
