@@ -7,6 +7,22 @@ use FPDI;
 class PDF_Extensions extends FPDI
 {
 
+    /**
+     * @return mixed
+     */
+    public function getHeight()
+    {
+        return $this->h;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getWidth()
+    {
+        return $this->w;
+    }
+
     function TextWithDirection($x, $y, $txt, $direction = 'R')
     {
         if ($direction == 'R') {

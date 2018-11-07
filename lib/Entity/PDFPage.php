@@ -7,6 +7,7 @@ use Wheregroup\MapExport\CoreBundle\Component\PDF_Extensions;
 use Wheregroup\MapExport\CoreBundle\Entity\PDFElements\Comment;
 use Wheregroup\MapExport\CoreBundle\Entity\PDFElements\Date;
 use Wheregroup\MapExport\CoreBundle\Entity\PDFElements\Extent;
+use Wheregroup\MapExport\CoreBundle\Entity\PDFElements\Legend;
 use Wheregroup\MapExport\CoreBundle\Entity\PDFElements\Map;
 use Wheregroup\MapExport\CoreBundle\Entity\PDFElements\Northarrow;
 use Wheregroup\MapExport\CoreBundle\Entity\PDFElements\Overview;
@@ -17,23 +18,31 @@ use Wheregroup\MapExport\CoreBundle\Entity\PDFElements\Title;
 class PDFPage
 {
     protected $pdf;
-
     protected $data;
-
+    protected $conf;
+    protected $templatePath;
     protected $elements = array();
+    protected $containsLegend = false;
 
-    public function __construct(PDF_Extensions &$pdf, $data, $conf)
+    public function __construct(PDF_Extensions &$pdf, $data, $conf, $templatePath)
     {
-        $templatePath = './MapbenderPrintBundle/templates/' . $data['template'];
-
-        $pdf->AddPage($conf['orientation'], array($conf['pageSize']['width'] * 10, $conf['pageSize']['height'] * 10));
-        $pdf->setSourceFile($templatePath . '.pdf');
-        $page = $pdf->importPage(1);
-        $pdf->useTemplate($page);
-        $pdf->SetAutoPageBreak(false);
-
         $this->pdf = &$pdf;
         $this->data = $data;
+
+        $this->templatePath = $templatePath;
+        $this->conf = $conf;
+
+        $this->init();
+    }
+
+    protected function init()
+    {
+        $this->pdf->AddPage($this->conf['orientation'],
+            array($this->conf['pageSize']['width'] * 10, $this->conf['pageSize']['height'] * 10));
+        $this->pdf->setSourceFile($this->templatePath . '.pdf');
+        $page = $this->pdf->importPage(1);
+        $this->pdf->useTemplate($page);
+        $this->pdf->SetAutoPageBreak(false);
     }
 
     public function addElement(\DOMElement $xml, $style = null)
@@ -67,6 +76,13 @@ class PDFPage
             case 'scale':
                 array_push($this->elements, new Scale($this->pdf, $x, $y, $width, $height, $this->data, $style));
                 break;
+            case 'legend':
+                //Test if client asks for legend
+                if ($data['printLegend'] = 1) {
+                    array_push($this->elements, new Legend($this->pdf, $x, $y, $width, $height, $this->data, $style));
+                    $this->containsLegend = true;
+                }
+                break;
             case 'extent_ll_x':
             case 'extent_ll_y':
             case 'extent_ur_x':
@@ -80,10 +96,25 @@ class PDFPage
                         new Comment($this->pdf, $x, $y, $width, $height, $this->data, $name, $style));
                     break;
                 }
+                //TODO Überprüfen ob das funktioniert
+                if (strpos($name, 'dynamic_image') === 0) {
+                    array_push($this->elements,
+                        new DynamicText($this->pdf, $x, $y, $width, $height, $this->data, $name, $style));
+                    break;
+                }
+                if (strpos($name, 'dynamic_text') === 0) {
+                    array_push($this->elements,
+                        new DynamicImage($this->pdf, $x, $y, $width, $height, $this->data, $name, $style));
+                    break;
+                }
             //var_dump($name);
         }
 
 
+    }
+
+    public function containsLegend(){
+        return $this->containsLegend;
     }
 
     public function getPDFPage()
@@ -93,5 +124,17 @@ class PDFPage
         }
 
         return $this->pdf->Output();
+    }
+
+    public function makePDFPage()
+    {
+        foreach ($this->elements as $element) {
+            $element->draw();
+        }
+    }
+
+    public function getPDF()
+    {
+        return $this->pdf;
     }
 }

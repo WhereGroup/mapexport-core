@@ -65,21 +65,13 @@ class OdgParser
 
         $elements = $xpath->query('//draw:page');
 
-        $elementNEW = $elements->item(0)->firstChild;
+        $element = $elements->item(0)->firstChild;
 
-        //TODO aufräumen
-        if ($elementNEW->hasAttribute('draw:name')) {
-            $pdfPage->addElement($elementNEW);
-        }
+        while ($element != null) {
 
-        //for ($i = 0; $i <= $size; $i++) {
-        while($elementNEW != null){
-            $elementOLD = $elementNEW;
-            $elementNEW = $elementOLD->nextSibling;
-
-            if ($elementNEW != null && $elementNEW->hasAttribute('draw:name')) {
+            if ($element != null && $element->hasAttribute('draw:name')) {
                 //now check if there is a style
-                $styleElement = $xpath->query('.//text:span', $elementNEW);
+                $styleElement = $xpath->query('.//text:span', $element);
                 if ($styleElement->item(0) != null) {
                     $styleCode = $styleElement->item(0)->getAttribute('text:style-name');
                 }
@@ -88,20 +80,30 @@ class OdgParser
                     $styleNode = $xpath->query('//style:style[@style:name="' . $styleCode . '"]/style:text-properties')->item(0);
                     $fontSize = $styleNode->getAttribute('fo:font-size');
                     $textColor = $styleNode->getAttribute('fo:color');
+                    $bold = $styleNode->getAttribute('fo:font-weight') == 'bold' ? true : false;
+                    $italic = $styleNode->getAttribute('fo:font-style') == 'italic' ? true : false;
+                    $underlined = $styleNode->getAttribute('style:text-underline-style') == 'solid' ? true : false;
                     $rgb = array();
                     $rgb['r'] = hexdec(substr($textColor, 1, 2));
                     $rgb['g'] = hexdec(substr($textColor, 3, 2));
                     $rgb['b'] = hexdec(substr($textColor, 5, 2));
 
-                    $fontStyle = array('fontSize' => $fontSize, 'textColor' => $rgb);
+                    $fontStyle = array(
+                        'fontSize' => $fontSize,
+                        'textColor' => $rgb,
+                        'bold' => $bold,
+                        'italic' => $italic,
+                        'underlined' => $underlined
+                    );
 
-                    $pdfPage->addElement($elementNEW, $fontStyle);
+                    $pdfPage->addElement($element, $fontStyle);
                 } else {
-                    $pdfPage->addElement($elementNEW);
+                    $pdfPage->addElement($element);
                 }
 
 
             }
+            $element = $element->nextSibling;
         }
 
     }

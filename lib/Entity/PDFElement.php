@@ -24,6 +24,7 @@ abstract class PDFElement
     protected $font = 'Arial';
     protected $fontSize = '14pt';
     protected $textColor = array('r' => 0, 'g' => 0, 'b' => 0);
+    protected $fontStyle = '';
 
     public function __construct(&$pdf, $x, $y, $width, $height, $data, $style = null)
     {
@@ -44,22 +45,38 @@ abstract class PDFElement
         if ($style['textColor'] != null) {
             $this->textColor = $style['textColor'];
         }
+        if ($style['bold']) {
+            $this->fontStyle .= 'B';
+        }
+        if ($style['italic']) {
+            $this->fontStyle .= 'I';
+        }
+        if ($style['underlined']) {
+            $this->fontStyle .= 'U';
+        }
+
 
         $this->init();
     }
 
-    public function setStyle($font, $fontSize, $textColor)
+    public function setStyle($font = null, $fontSize = null, $textColor = null, $fontStyle = null)
     {
-        $this->font = $font;
-        $this->fontSize = $fontSize;
-        $this->textColor = $textColor;
+        if ($font) {
+            $this->font = $font;
+        }
+        if ($fontSize) {
+            $this->fontSize = $fontSize;
+        }
+        if ($textColor) {
+            $this->textColor = $textColor;
+        }
+        if ($fontStyle) {
+            $this->fontStyle = $fontStyle;
+        }
 
     }
 
-    public function draw()
-    {
-
-    }
+    abstract public function draw();
 
     abstract protected function init();
 }

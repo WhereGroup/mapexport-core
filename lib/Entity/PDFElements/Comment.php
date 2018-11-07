@@ -25,7 +25,7 @@ class Comment extends PDFElement
 
     public function draw()
     {
-        $this->pdf->SetFont($this->font);
+        $this->pdf->SetFont($this->font, $this->fontStyle);
         $this->pdf->SetTextColor($this->textColor['r'], $this->textColor['g'], $this->textColor['b']);
         $this->pdf->SetFontSize($this->fontSize);
 

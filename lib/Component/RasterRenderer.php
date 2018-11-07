@@ -130,6 +130,12 @@ class RasterRenderer
         imagealphablending($layerImage, false);
         imagesavealpha($layerImage, true);
 
+        //Set opacity
+        if (array_key_exists('opacity', $layer)) {
+            $transparency = 1-$layer['opacity'];
+            imagefilter($layerImage, IMG_FILTER_COLORIZE, 0, 0, 0, 127 * $transparency);
+        }
+
         return $layerImage;
     }
 
