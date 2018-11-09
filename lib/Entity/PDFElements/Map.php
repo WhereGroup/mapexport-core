@@ -31,7 +31,6 @@ class Map extends PDFElement
         //$this->img = $this->mapExporter->buildMap($this->data, $this->width, $this->height)->getImage();
 
         //Save image to put it on pdf
-        //TODO Darf ich das?
         $temp = tempnam('', 'img');
         imagepng($this->img, $temp);
         $this->pdf->Image($temp, $this->x, $this->y, $this->width, $this->height, 'png');

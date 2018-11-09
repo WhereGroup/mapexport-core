@@ -8,6 +8,7 @@ use Wheregroup\MapExport\CoreBundle\Entity\PDFElements\Comment;
 use Wheregroup\MapExport\CoreBundle\Entity\PDFElements\Date;
 use Wheregroup\MapExport\CoreBundle\Entity\PDFElements\Extent;
 use Wheregroup\MapExport\CoreBundle\Entity\PDFElements\Legend;
+use Wheregroup\MapExport\CoreBundle\Entity\PDFElements\LegendImage;
 use Wheregroup\MapExport\CoreBundle\Entity\PDFElements\Map;
 use Wheregroup\MapExport\CoreBundle\Entity\PDFElements\Northarrow;
 use Wheregroup\MapExport\CoreBundle\Entity\PDFElements\Overview;
@@ -81,6 +82,9 @@ class PDFPage
             case 'scale':
                 array_push($this->elements, new Scale($this->pdf, $x, $y, $width, $height, $this->data, $style));
                 break;
+            case 'legendpage_image':
+                array_push($this->elements, new LegendImage($this->pdf, $x, $y, $width, $height, $this->data));
+                break;
             case 'legend':
                 //Test if client asks for legend
                 if ($data['printLegend'] = 1) {
@@ -108,17 +112,6 @@ class PDFPage
                         new Comment($this->pdf, $x, $y, $width, $height, $this->data, $name, $style));
                     break;
                 }
-                //TODO Überprüfen ob das funktioniert
-                if (strpos($name, 'dynamic_image') === 0) {
-                    array_push($this->elements,
-                        new DynamicText($this->pdf, $x, $y, $width, $height, $this->data, $name, $style));
-                    break;
-                }
-                if (strpos($name, 'dynamic_text') === 0) {
-                    array_push($this->elements,
-                        new DynamicImage($this->pdf, $x, $y, $width, $height, $this->data, $name, $style));
-                    break;
-                }
             //var_dump($name);
         }
 
@@ -130,16 +123,22 @@ class PDFPage
         if ($legend == null) {
             $legend = new Legend($this->pdf, 0.5, 1, $this->pdf->getWidth() / 10, $this->pdf->getHeight() / 10,
                 $this->data);
-            $legend->setStyle('Arial', 11, null, 'B');
         } else {
-            $legend->setPosition(0.5,1, $this->pdf->getWidth() / 10, $this->pdf->getHeight() / 10);
+            $legend->setPosition(0.5, 1, $this->pdf->getWidth() / 10, $this->pdf->getHeight() / 10);
             $legend->setAllPositions();
         }
+        $legend->setStyle('Arial', 11, array('r' => 0, 'g' => 0, 'b' => 0), 'B');
 
         $this->containsLegend = true;
         $this->legendOverflow = $legend->getRemainingImages();
 
         array_push($this->elements, $legend);
+
+        //legendPageImage
+        $legendImageHeight = 1.5;
+        array_push($this->elements,
+            new LegendImage($this->pdf, $this->pdf->getWidth()/10 - $legendImageHeight * 2.5, 0 + $legendImageHeight * 0.5,
+                0, $legendImageHeight, $this->data));
 
     }
 

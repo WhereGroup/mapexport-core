@@ -10,8 +10,6 @@ class Scalebar extends PDFElement
 
     public function draw()
     {
-        //TODO Maybe add more styling options
-
         $this->pdf->SetLineWidth(0.1);
         $this->pdf->SetDrawColor(0, 0, 0);
         $this->pdf->SetFillColor(0, 0, 0);
