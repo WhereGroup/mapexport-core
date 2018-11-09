@@ -18,7 +18,6 @@ class OdgParser
         $opened = zip_open($odgFile);
         $xmlString = null;
 
-        //TODO Set location for templates
         //Go through content of archive and return content of the requested xml file
         while ($zipEntry = zip_read($opened)) {
             if (zip_entry_name($zipEntry) == $file) {
@@ -50,33 +49,52 @@ class OdgParser
             'pageSize' => array(
                 'height' => $pageGeometry->getAttribute('fo:page-height'),
                 'width' => $pageGeometry->getAttribute('fo:page-width')
-            ),
-            'fields' => array()
+            )
         );
 
         return $conf;
     }
 
-    public function getElements(PDFPage &$pdfPage, $path)
+    public function getPageNumber($path)
+    {
+        $doc = $this->getXML($path, 'content.xml');
+        $xpath = new \DOMXPath($doc);
+
+        $pages =  $xpath->query('//office:drawing')->item(0)->childNodes;
+
+        //count number of pages
+        $counter = 0;
+        foreach ($pages as $page){
+            $counter++;
+        }
+        return $counter;
+    }
+
+    public function getElements(PDFPage &$pdfPage, $path, $page)
     {
 
         $doc = $this->getXML($path, 'content.xml');
         $xpath = new \DOMXPath($doc);
 
-        $elements = $xpath->query('//draw:page');
+        $pages =  $xpath->query('//office:drawing');
 
-        $element = $elements->item(0)->firstChild;
+        $elements = $pages->item(0)->firstChild;
 
+        //Find the right page
+        for ($i = 1; $i < $page; $i++){
+            $elements = $elements->nextSibling;
+        }
+
+        $element = $elements->firstChild;
         while ($element != null) {
 
             if ($element != null && $element->hasAttribute('draw:name')) {
                 //now check if there is a style
                 $styleElement = $xpath->query('.//text:span', $element);
                 if ($styleElement->item(0) != null) {
+                    //If there are style attributes defined, add an element with style to the page
                     $styleCode = $styleElement->item(0)->getAttribute('text:style-name');
-                }
 
-                if (isset($styleCode)) {
                     $styleNode = $xpath->query('//style:style[@style:name="' . $styleCode . '"]/style:text-properties')->item(0);
                     $fontSize = $styleNode->getAttribute('fo:font-size');
                     $textColor = $styleNode->getAttribute('fo:color');
@@ -98,6 +116,7 @@ class OdgParser
 
                     $pdfPage->addElement($element, $fontStyle);
                 } else {
+                    //If there are no style attributes defined, add an element without style to the page
                     $pdfPage->addElement($element);
                 }
 

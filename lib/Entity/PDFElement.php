@@ -76,6 +76,14 @@ abstract class PDFElement
 
     }
 
+    public function setPosition($x, $y, $width, $height)
+    {
+        $this->x = $x * self::scale;
+        $this->y = $y * self::scale;
+        $this->width = $width * self::scale;
+        $this->height = $height * self::scale;
+    }
+
     abstract public function draw();
 
     abstract protected function init();

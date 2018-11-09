@@ -9,48 +9,87 @@ use Wheregroup\MapExport\CoreBundle\Entity\PDFElement;
 class Legend extends PDFElement
 {
     protected $legendImages = array();
+    protected $drawableImages = array();
+    protected $remainingImages = array();
 
     protected function init()
     {
-        $httpClient = new HTTPClient();
+        if (array_key_exists('legends', $this->data)) {
+            $httpClient = new HTTPClient();
 
-        //get image
-        foreach ($this->data['legends'] as $legend) {
-            $result = $httpClient->open(current($legend));
-            $this->legendImages[key($legend)] = imagecreatefromstring($result->getData());
+            //fill legendImages with all images, even if they might not fit
+            $index = 0;
+            foreach ($this->data['legends'] as $legend) {
+                $result = $httpClient->open(current($legend));
+                $this->legendImages[$index]['title'] = key($legend);
+                $this->legendImages[$index]['img'] = imagecreatefromstring($result->getData());
+                $index++;
+            }
+
+            //set positions of every image and remove those that don't fit
+            $this->setAllPositions();
         }
+    }
+
+    public function setAllPositions()
+    {
+        $index = count($this->legendImages);
+
+        //set positions of every image and remove those that don't fit
+        for ($i = 0; $i < $index; $i++) {
+            $position = $this->getPosition($i);
+            if ($position) {
+                $this->legendImages[$i] += $position;
+            } else {
+                //move all images that can not be drawn to remainingImages
+                $this->remainingImages = array_slice($this->legendImages, $i);
+
+                $this->drawableImages = array_slice($this->legendImages, 0, $i);
+                break;
+            }
+
+            $this->drawableImages = $this->legendImages;
+
+        }
+    }
+
+    protected function getPosition($index)
+    {
+        if ($index == 0) {
+            $x = 0;
+            $y = 0;
+        } else {
+            $x = $this->legendImages[$index - 1]['x'] - $this->x;
+            $y = $this->legendImages[$index - 1]['y'] - $this->y;
+
+            $imageheight = (imagesy($this->legendImages[$index]['img']) * 25.4 / 96) + 10;
+
+            $y += round(imagesy($this->legendImages[$index - 1]['img']) * 25.4 / 96) + 10;
+
+            //test if this legend image is to large to add it below the last image
+            if ($y + $imageheight > $this->height) {
+                //End of column. Start new one.
+                $x += 105;
+                $y = 0;
+            }
+            if (($x) + 20 > ($this->width)) {
+                return false;
+            }
+
+        }
+
+        return array('x' => $x + $this->x, 'y' => $y + $this->y);
     }
 
     public function draw()
     {
-        $x = $this->x;
-        $y = $this->y;
-        $counter = 0;
+        foreach ($this->drawableImages as $legendImage) {
 
-        foreach ($this->legendImages as $title => $img) {
+            $x = $legendImage['x'];
+            $y = $legendImage['y'];
 
-            $counter++;
-
-            $imageheight = imagesy($img);
-            $imagewidth = imagesx($img);
-
-            //test if this legend image is to large to add it below the last image
-            if ((($y-$this->y) + round($imageheight * 25.4 / 96) + 10) > ($this->height)) {
-                //End of column. Start new one.
-                $x += 105;
-                $y = 10;
-            }
-            if (($x-$this->x) + 20 > ($this->width) && $counter < count($this->legendImages)) {
-                //End of page. Start new one.
-                $this->pdf->addPage('P');
-                $x = 5;
-                $y = 10;
-                //TODO Legend Page Image
-                /*if (!empty($this->conf['legendpage_image'])) {
-                    $this->addLegendPageImage();
-                }*/
-            }
-
+            $imageheight = imagesy($legendImage['img']);
+            $imagewidth = imagesx($legendImage['img']);
 
             //setup for title
             $this->pdf->SetFont($this->font, $this->fontStyle);
@@ -59,20 +98,33 @@ class Legend extends PDFElement
 
             //write title
             $this->pdf->SetXY($x, $y);
-            $this->pdf->Cell(0, 0, utf8_decode($title));
+            $this->pdf->Cell(0, 0, utf8_decode($legendImage['title']));
             $y += 5;
 
             $imagepath = 'tempLegend';
-            imagepng($img, $imagepath);
+            imagepng($legendImage['img'], $imagepath);
 
             //Add image onto pdf page
             $this->pdf->Image($imagepath, $x, $y, $imagewidth * 25.4 / 96, $imageheight * 25.4 / 96, 'png');
 
             unlink('tempLegend');
 
-            //Set y to end of image
-            $y += round($imageheight * 25.4 / 96) + 10;
+        }
+    }
 
+    public function getRemainingImages()
+    {
+        if ($this->remainingImages != null) {
+            $newLegend = clone $this;
+
+            $newLegend->legendImages = $newLegend->remainingImages;
+            $newLegend->drawableImages = null;
+            $newLegend->remainingImages = null;
+            //$newLegend->setAllPositions();
+
+            return $newLegend;
+        } else {
+            return null;
         }
     }
 

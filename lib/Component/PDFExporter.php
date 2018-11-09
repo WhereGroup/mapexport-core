@@ -25,22 +25,44 @@ class PDFExporter
         $templatePath = $this->resourceDir . '/templates/' . $data['template'];
 
         $odgParser = new OdgParser();
+        //Get page configuration (Orientation, width, height)
         $conf = $odgParser->getConf($templatePath . '.odg');
 
         //Create PDF
         $pdf = new PDF_Extensions();
+        $pdfPages = array();
 
-        //Add new Page to PDF
-        $pdfPage = new PDFPage($pdf, $data, $conf, $templatePath);
+        $legendExists = false;
+        $legendOverflow = null;
+        $templatePageNumber = $odgParser->getPageNumber($templatePath . '.odg');
+        for ($i = 1; $i <= $templatePageNumber; $i++) {
+            //Add new Page to PDF
+            $pdfPages[$i] = new PDFPage($pdf, $data, $conf, $i, $templatePath);
+            //Fill PDF Page
+            $odgParser->getElements($pdfPages[$i], $templatePath . '.odg', $i);
+            $pdfPages[$i]->makePDFPage();
+            if ($legendExists == false && $pdfPages[$i]->containsLegend()) {
+                $legendExists = true;
+            }
+            if ($pdfPages[$i]->getLegendOverflow() != null) {
+                $legendOverflow = $pdfPages[$i]->getLegendOverflow();
+            }
+        }
 
-        //Fill PDF Page
-        $odgParser->getElements($pdfPage, $templatePath . '.odg');
-        $pdfPage->makePDFPage();
+        //Add new legend page if there was no legend
+        if ((array_key_exists('printLegend', $data) && $data['printLegend'] == 1 && !$legendExists) || $legendOverflow != null) {
+            do {
+                $lpconf = array('orientation' => 'Portrait', 'pageSize' => array('height' => 29.7, 'width' => 21.0));
+                $legendPage = new PDFPage($pdf, $data, $lpconf);
+                if ($legendOverflow != null) {
+                    $legendPage->forceLegend($legendOverflow);
+                } else {
+                    $legendPage->forceLegend();
+                }
+                $legendPage->makePDFPage();
 
-        //Test if client wants legend to be printed and if there isn't already a field for it on first page
-        if($data['printLegend'] = 1 && !$pdfPage->containsLegend()) {
-            $legendPage = new LegendPage($pdf, $data, $conf, $templatePath);
-            $legendPage->makePDFPage();
+                $legendOverflow = $legendPage->getLegendOverflow();
+            } while ($legendOverflow != null);
         }
 
         //return $pdfPage->getPDFPage();
