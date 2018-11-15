@@ -121,22 +121,29 @@ class RasterRenderer
     protected function getImageFromLayer($layer, $width = null, $height = null)
     {
         $result = $this->httpClient->open($layer['url']);
-        $layerImage = imagecreatefromstring($result->getData());
+        $image = $result->getData();
+        if (is_resource($image)) {
+            $layerImage = imagecreatefromstring($result->getData());
 
-        if ($width != null && $height != null) {
-            $layerImage = imagescale($layerImage, $width, $height);
+            if ($width != null && $height != null) {
+                $layerImage = imagescale($layerImage, $width, $height);
+            }
+
+            imagealphablending($layerImage, false);
+            imagesavealpha($layerImage, true);
+
+            //Set opacity
+            if (array_key_exists('opacity', $layer)) {
+                $transparency = 1 - $layer['opacity'];
+                imagefilter($layerImage, IMG_FILTER_COLORIZE, 0, 0, 0, 127 * $transparency);
+            }
+
+            return $layerImage;
+        } else {
+            //TODO Logger
+            return null;
         }
 
-        imagealphablending($layerImage, false);
-        imagesavealpha($layerImage, true);
-
-        //Set opacity
-        if (array_key_exists('opacity', $layer)) {
-            $transparency = 1-$layer['opacity'];
-            imagefilter($layerImage, IMG_FILTER_COLORIZE, 0, 0, 0, 127 * $transparency);
-        }
-
-        return $layerImage;
     }
 
     /**

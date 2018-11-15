@@ -4,7 +4,7 @@ namespace Wheregroup\MapExport\CoreBundle\Component;
 
 use FPDI;
 
-class PDF_Extensions extends FPDI
+class PDFExtensions extends FPDI
 {
 
     /**

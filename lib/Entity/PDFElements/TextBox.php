@@ -4,7 +4,7 @@ namespace Wheregroup\MapExport\CoreBundle\Entity\PDFElements;
 
 use Wheregroup\MapExport\CoreBundle\Entity\PDFElement;
 
-class Comment extends PDFElement
+class TextBox extends PDFElement
 {
     protected $comment;
     protected $commentID;

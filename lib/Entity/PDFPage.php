@@ -3,8 +3,8 @@
 namespace Wheregroup\MapExport\CoreBundle\Entity;
 
 
-use Wheregroup\MapExport\CoreBundle\Component\PDF_Extensions;
-use Wheregroup\MapExport\CoreBundle\Entity\PDFElements\Comment;
+use Wheregroup\MapExport\CoreBundle\Component\PDFExtensions;
+use Wheregroup\MapExport\CoreBundle\Entity\PDFElements\TextBox;
 use Wheregroup\MapExport\CoreBundle\Entity\PDFElements\Date;
 use Wheregroup\MapExport\CoreBundle\Entity\PDFElements\Extent;
 use Wheregroup\MapExport\CoreBundle\Entity\PDFElements\Legend;
@@ -27,7 +27,7 @@ class PDFPage
     protected $containsLegend = false;
     protected $legendOverflow = null;
 
-    public function __construct(PDF_Extensions &$pdf, $data, $conf, $page = null, $templatePath = null)
+    public function __construct(PDFExtensions &$pdf, $data, $conf, $page = null, $templatePath = null)
     {
         $this->pdf = &$pdf;
         $this->data = $data;
@@ -54,10 +54,10 @@ class PDFPage
     public function addElement(\DOMElement $xml, $style = null)
     {
         $name = $xml->getAttribute('draw:name');
-        $x = $xml->getAttribute('svg:x');
-        $y = $xml->getAttribute('svg:y');
-        $width = $xml->getAttribute('svg:width');
-        $height = $xml->getAttribute('svg:height');
+        $x = substr($xml->getAttribute('svg:x'), 0, -3);
+        $y = substr($xml->getAttribute('svg:y'), 0, -3);
+        $width = substr($xml->getAttribute('svg:width'), 0, -3);
+        $height = substr($xml->getAttribute('svg:height'), 0, -3);
 
         //Find out if there is a fitting class and add element to list
         switch ($name) {
@@ -75,9 +75,6 @@ class PDFPage
                 break;
             case 'date':
                 array_push($this->elements, new Date($this->pdf, $x, $y, $width, $height, $this->data, $style));
-                break;
-            case 'title':
-                array_push($this->elements, new Title($this->pdf, $x, $y, $width, $height, $this->data, $style));
                 break;
             case 'scale':
                 array_push($this->elements, new Scale($this->pdf, $x, $y, $width, $height, $this->data, $style));
@@ -107,11 +104,10 @@ class PDFPage
                     new Extent($this->pdf, $x, $y, $width, $height, $this->data, $name, $style));
                 break;
             default:
-                if (strpos($name, 'comment') === 0) {
-                    array_push($this->elements,
-                        new Comment($this->pdf, $x, $y, $width, $height, $this->data, $name, $style));
-                    break;
-                }
+                array_push($this->elements,
+                    new TextBox($this->pdf, $x, $y, $width, $height, $this->data, $name, $style));
+                break;
+
             //var_dump($name);
         }
 
@@ -137,7 +133,8 @@ class PDFPage
         //legendPageImage
         $legendImageHeight = 1.5;
         array_push($this->elements,
-            new LegendImage($this->pdf, $this->pdf->getWidth()/10 - $legendImageHeight * 2.5, 0 + $legendImageHeight * 0.5,
+            new LegendImage($this->pdf, $this->pdf->getWidth() / 10 - $legendImageHeight * 2.5,
+                0 + $legendImageHeight * 0.5,
                 0, $legendImageHeight, $this->data));
 
     }

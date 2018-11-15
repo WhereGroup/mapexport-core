@@ -47,8 +47,8 @@ class OdgParser
         $conf = array(
             'orientation' => ucwords($pageGeometry->getAttribute('style:print-orientation')),
             'pageSize' => array(
-                'height' => $pageGeometry->getAttribute('fo:page-height'),
-                'width' => $pageGeometry->getAttribute('fo:page-width')
+                'height' => substr($pageGeometry->getAttribute('fo:page-height'), 0, -2),
+                'width' => substr($pageGeometry->getAttribute('fo:page-width'), 0, -2)
             )
         );
 
@@ -96,7 +96,7 @@ class OdgParser
                     $styleCode = $styleElement->item(0)->getAttribute('text:style-name');
 
                     $styleNode = $xpath->query('//style:style[@style:name="' . $styleCode . '"]/style:text-properties')->item(0);
-                    $fontSize = $styleNode->getAttribute('fo:font-size');
+                    $fontSize = substr($styleNode->getAttribute('fo:font-size'), 0, -2);
                     $textColor = $styleNode->getAttribute('fo:color');
                     $bold = $styleNode->getAttribute('fo:font-weight') == 'bold' ? true : false;
                     $italic = $styleNode->getAttribute('fo:font-style') == 'italic' ? true : false;
