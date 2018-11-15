@@ -19,8 +19,11 @@ class Comment extends PDFElement
     {
         if (array_key_exists($this->commentID, $this->data['extra'])) {
             $this->comment = $this->data['extra'][$this->commentID];
+        } else {
+            if (array_key_exists($this->commentID, $this->data)) {
+                $this->comment = $this->data[$this->commentID];
+            }
         }
-
     }
 
     public function draw()
@@ -29,7 +32,7 @@ class Comment extends PDFElement
         $this->pdf->SetTextColor($this->textColor['r'], $this->textColor['g'], $this->textColor['b']);
         $this->pdf->SetFontSize($this->fontSize);
 
-        $this->pdf->SetXY($this->x - 1, $this->y);
+        $this->pdf->SetXY($this->x, $this->y);
         $this->pdf->Cell($this->width, $this->height, $this->comment);
     }
 }
