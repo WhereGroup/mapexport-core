@@ -133,6 +133,14 @@ class FeatureRenderer
 
         $img = $canvas->getImage();
 
+        //Set opacity if values are missing
+        if (!isset($style['strokeOpacity'])) {
+            $style['strokeOpacity'] = 1;
+        }
+        if (!isset($style['fillOpacity'])) {
+            $style['fillOpacity'] = 1;
+        }
+
         $rgbStrokeColor = $this->getColor($style['strokeColor']);
         $strokeColor = imagecolorallocatealpha($img, $rgbStrokeColor[0], $rgbStrokeColor[1], $rgbStrokeColor[2],
             (1 - $style['strokeOpacity']) * 127);
