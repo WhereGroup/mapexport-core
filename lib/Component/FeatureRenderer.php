@@ -142,10 +142,16 @@ class FeatureRenderer
         }
 
         $rgbStrokeColor = $this->getColor($style['strokeColor']);
+        if (isset($rgbStrokeColor[3])) {
+            $style['fillOpacity'] = $rgbStrokeColor['3'];
+        }
         $strokeColor = imagecolorallocatealpha($img, $rgbStrokeColor[0], $rgbStrokeColor[1], $rgbStrokeColor[2],
             (1 - $style['strokeOpacity']) * 127);
 
         $rgbFillColor = $this->getColor($style['fillColor']);
+        if (isset($rgbFillColor[3])) {
+            $style['fillOpacity'] = $rgbFillColor['3'];
+        }
         $fillColor = imagecolorallocatealpha($img, $rgbFillColor[0], $rgbFillColor[1], $rgbFillColor[2],
             (1 - $style['fillOpacity']) * 127);
 
@@ -324,25 +330,30 @@ class FeatureRenderer
      */
     protected function getColor($colorstring)
     {
-        if (substr($colorstring, 0, 1) == '#') {
-            return $this->hexToRGB($colorstring);
+        if (substr($colorstring, 0, 4) == 'rgba') {
+            $color = substr($colorstring, 5, -1);
+            return explode(',', $color);
         } else {
-            switch ($colorstring) {
-                case 'red':
-                    return array(255, 0, 0);
-                    break;
-                case 'green':
-                    return array(0, 255, 0);
-                    break;
-                case 'blue':
-                    return array(0, 0, 255);
-                    break;
-                case 'white':
-                    return array(255, 255, 255);
-                    break;
-                default:
-                    return array(0, 0, 0);
-                    break;
+            if (substr($colorstring, 0, 1) == '#') {
+                return $this->hexToRGB($colorstring);
+            } else {
+                switch ($colorstring) {
+                    case 'red':
+                        return array(255, 0, 0);
+                        break;
+                    case 'green':
+                        return array(0, 255, 0);
+                        break;
+                    case 'blue':
+                        return array(0, 0, 255);
+                        break;
+                    case 'white':
+                        return array(255, 255, 255);
+                        break;
+                    default:
+                        return array(0, 0, 0);
+                        break;
+                }
             }
         }
 
