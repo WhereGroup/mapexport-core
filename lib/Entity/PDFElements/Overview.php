@@ -18,22 +18,22 @@ class Overview extends Map
         //Build new $data array
         $data = array();
         //Imagesize
-        $data['width'] = $this->width;
-        $data['height'] = $this->height;
+        $data['width'] = $this->element->width;
+        $data['height'] = $this->element->height;
 
         $data['format'] = 'png';
-        $data['quality'] = $this->data['quality'];
+        $data['quality'] = $this->element->data['quality'];
 
-        $data['centerx'] = $this->data['center']['x'];
-        $data['centery'] = $this->data['center']['y'];
+        $data['centerx'] = $this->element->data['center']['x'];
+        $data['centery'] = $this->element->data['center']['y'];
 
         //Get extent of overview bounding box
-        $data['extentwidth'] = $this->width * $this->data['overview'][0]['scale'] / 1000;
-        $data['extentheight'] = $this->height * $this->data['overview'][0]['scale'] / 1000;
+        $data['extentwidth'] = $this->element->width * $this->element->data['overview'][0]['scale'] / 1000;
+        $data['extentheight'] = $this->element->height * $this->element->data['overview'][0]['scale'] / 1000;
 
 
         //WMS service gets overlay
-        $data['requests'] = $this->data['overview'];
+        $data['requests'] = $this->element->data['overview'];
 
         //Map Outline
         $data['vectorLayers'][0] = array(
@@ -44,10 +44,10 @@ class Overview extends Map
                     'type' => 'Polygon',
                     'coordinates' => array(
                         array(
-                            array_values($this->data['extent_feature'][0]),
-                            array_values($this->data['extent_feature'][1]),
-                            array_values($this->data['extent_feature'][2]),
-                            array_values($this->data['extent_feature'][3])
+                            array_values($this->element->data['extent_feature'][0]),
+                            array_values($this->element->data['extent_feature'][1]),
+                            array_values($this->element->data['extent_feature'][2]),
+                            array_values($this->element->data['extent_feature'][3])
                         )
                     ),
                     'style' => array(

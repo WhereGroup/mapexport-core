@@ -10,7 +10,7 @@ use Wheregroup\MapExport\CoreBundle\Component\MapExporter;
 use Wheregroup\MapExport\CoreBundle\Component\RasterRenderer;
 use Wheregroup\MapExport\CoreBundle\Entity\PDFElement;
 
-class Map extends PDFElement
+class Map
 {
     /**
      * @var MapExporter
@@ -18,14 +18,24 @@ class Map extends PDFElement
     protected $mapExporter;
 
     protected $img;
+    protected $element;
+    protected $pdf;
+
+    public function __construct(&$pdf, $element)
+    {
+        $this->pdf = $pdf;
+        $this->element = $element;
+
+        $this->init();
+    }
 
     public function draw()
     {
 
-        $width = round($this->width / 25.4 * $this->data['quality']);
-        $height = round($this->height / 25.4 * $this->data['quality']);
+        $width = round($this->element->width / 25.4 * $this->element->data['quality']);
+        $height = round($this->element->height / 25.4 * $this->element->data['quality']);
 
-        $map = $this->mapExporter->buildMap($this->data, $width, $height);
+        $map = $this->mapExporter->buildMap($this->element->data, $width, $height);
         $this->img = $map->getImage();
 
         //$this->img = $this->mapExporter->buildMap($this->data, $this->width, $this->height)->getImage();
@@ -33,13 +43,13 @@ class Map extends PDFElement
         //Save image to put it on pdf
         $temp = tempnam('', 'img');
         imagepng($this->img, $temp);
-        $this->pdf->Image($temp, $this->x, $this->y, $this->width, $this->height, 'png');
+        $this->pdf->Image($temp, $this->element->x, $this->element->y, $this->element->width, $this->element->height, 'png');
 
         //Remove the saved image
         unlink($temp);
 
         //Draw frame
-        $this->pdf->Rect($this->x, $this->y, $this->width, $this->height);
+        $this->pdf->Rect($this->element->x, $this->element->y, $this->element->width, $this->element->height);
 
     }
 

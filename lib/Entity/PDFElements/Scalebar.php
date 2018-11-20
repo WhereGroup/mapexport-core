@@ -4,9 +4,19 @@ namespace Wheregroup\MapExport\CoreBundle\Entity\PDFElements;
 
 use Wheregroup\MapExport\CoreBundle\Entity\PDFElement;
 
-class Scalebar extends PDFElement
+class Scalebar
 {
     protected $scale;
+    protected $pdf;
+    protected $element;
+
+    public function __construct(&$pdf, $element)
+    {
+        $this->pdf = $pdf;
+        $this->element = $element;
+
+        $this->init();
+    }
 
     public function draw()
     {
@@ -21,24 +31,24 @@ class Scalebar extends PDFElement
         $sbHeight = 2;
         $sbWidth = 50;
 
-        $this->pdf->Text($this->x - 1, $this->y - 1, '0');
-        $this->pdf->Text($this->x + $sbWidth - 4, $this->y - 1, $length . '' . $suffix);
+        $this->pdf->Text($this->element->x - 1, $this->element->y - 1, '0');
+        $this->pdf->Text($this->element->x + $sbWidth - 4, $this->element->y - 1, $length . '' . $suffix);
 
         //Draw black part of scalebar
         $this->pdf->SetFillColor(0, 0, 0);
-        $this->pdf->Rect($this->x, $this->y, $sbWidth, $sbHeight, 'FD');
+        $this->pdf->Rect($this->element->x, $this->element->y, $sbWidth, $sbHeight, 'FD');
 
         //Draw white parts of scalebar
         $partWidth = round($sbWidth / 5);
         $this->pdf->SetFillColor(255, 255, 255);
-        $this->pdf->Rect($this->x + $partWidth, $this->y, $partWidth, $sbHeight, 'FD');
-        $this->pdf->Rect($this->x + $partWidth * 3, $this->y, $partWidth, $sbHeight, 'FD');
+        $this->pdf->Rect($this->element->x + $partWidth, $this->element->y, $partWidth, $sbHeight, 'FD');
+        $this->pdf->Rect($this->element->x + $partWidth * 3, $this->element->y, $partWidth, $sbHeight, 'FD');
 
     }
 
     protected function init()
     {
-        $this->scale = $this->data['scale_select'];
+        $this->scale = $this->element->data['scale_select'];
     }
 
 }

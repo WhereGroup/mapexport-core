@@ -5,22 +5,23 @@ namespace Wheregroup\MapExport\CoreBundle\Entity\PDFElements;
 
 use Wheregroup\MapExport\CoreBundle\Entity\PDFElement;
 
-class Extent extends PDFElement
+class Extent
 {
     protected $scale;
-    protected $name;
+    protected $pdf;
+    protected $element;
 
-    public function __construct($pdf, $x, $y, $width, $height, $data, $name, $style = null)
+    public function __construct(&$pdf, $element)
     {
-        $this->name = $name;
+        $this->pdf = $pdf;
+        $this->element = $element;
 
-        parent::__construct($pdf, $x, $y, $width, $height, $data, $style);
+        $this->init();
     }
 
     protected function init()
     {
-        //$this->getStyle($this->data['template']);
-        $this->scale = $this->data['scale_select'];
+        $this->scale = $this->element->data['scale_select'];
 
     }
 
@@ -31,44 +32,42 @@ class Extent extends PDFElement
         $corrFactor = 2;
         $precision = 2;
         // correction factor and round precision if WGS84
-        if($this->data['extent']['width'] < 1){
+        if($this->element->data['extent']['width'] < 1){
             $corrFactor = 3;
             $precision = 6;
         }
 
-        switch ($this->name) {
+        switch ($this->element->name) {
             case ('extent_ur_y'):
                 // upper right Y
-                $pdf->Text($this->x + $corrFactor, $this->y + 3,
-                    round($this->data['extent_feature'][2]['y'], $precision));
+                $pdf->Text($this->element->x + $corrFactor, $this->element->y + 3,
+                    round($this->element->data['extent_feature'][2]['y'], $precision));
                 break;
             case ('extent_ur_x'):
                 // upper right X
-                $pdf->TextWithDirection3($this->x + 1, $this->y,
-                    round($this->data['extent_feature'][2]['x'], $precision),'D');
+                $pdf->TextWithDirection3($this->element->x + 1, $this->element->y,
+                    round($this->element->data['extent_feature'][2]['x'], $precision),'D');
                 break;
             case ('extent_ll_y'):
                 // lower left Y
-                $pdf->Text($this->x, $this->y + 3,
-                    round($this->data['extent_feature'][0]['y'], $precision));
+                $pdf->Text($this->element->x, $this->element->y + 3,
+                    round($this->element->data['extent_feature'][0]['y'], $precision));
                 break;
             case ('extent_ll_x'):
                 // lower left X
-                $pdf->TextWithDirection3($this->x + 3, $this->y + 30,
-                    round($this->data['extent_feature'][0]['x'], $precision),'U');
+                $pdf->TextWithDirection3($this->element->x + 3, $this->element->y + 30,
+                    round($this->element->data['extent_feature'][0]['x'], $precision),'U');
                 break;
         }
     }
 
     public function draw()
     {
-        $this->pdf->SetFont($this->font, $this->fontStyle);
-        $this->pdf->SetTextColor($this->textColor['r'], $this->textColor['g'], $this->textColor['b']);
-        $this->pdf->SetFontSize($this->fontSize);
+        $this->pdf->SetFont($this->element->font, $this->element->fontStyle);
+        $this->pdf->SetTextColor($this->element->textColor['r'], $this->element->textColor['g'], $this->element->textColor['b']);
+        $this->pdf->SetFontSize($this->element->fontSize);
 
         $this->addCoordinates();
-        //$this->pdf->SetXY($this->x-1, $this->y);
-        //$this->pdf->Cell($this->width, $this->height, 'Extent');
 
     }
 }

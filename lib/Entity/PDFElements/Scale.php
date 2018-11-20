@@ -4,25 +4,35 @@ namespace Wheregroup\MapExport\CoreBundle\Entity\PDFElements;
 
 use Wheregroup\MapExport\CoreBundle\Entity\PDFElement;
 
-class Scale extends PDFElement
+class Scale
 {
     protected $scale;
+    protected $pdf;
+    protected $element;
+
+    public function __construct(&$pdf, $element)
+    {
+        $this->pdf = $pdf;
+        $this->element = $element;
+
+        $this->init();
+    }
 
     protected function init()
     {
         //$this->getStyle($this->data['template']);
-        $this->scale = $this->data['scale_select'];
+        $this->scale = $this->element->data['scale_select'];
 
     }
 
     public function draw()
     {
-        $this->pdf->SetFont($this->font, $this->fontStyle);
-        $this->pdf->SetTextColor($this->textColor['r'], $this->textColor['g'], $this->textColor['b']);
-        $this->pdf->SetFontSize($this->fontSize);
+        $this->pdf->SetFont($this->element->font, $this->element->fontStyle);
+        $this->pdf->SetTextColor($this->element->textColor['r'], $this->element->textColor['g'], $this->element->textColor['b']);
+        $this->pdf->SetFontSize($this->element->fontSize);
 
-        $this->pdf->SetXY($this->x, $this->y);
-        $this->pdf->Cell($this->width, $this->height, '1 : '.$this->scale);
+        $this->pdf->SetXY($this->element->x-1, $this->element->y);
+        $this->pdf->Cell($this->element->width, $this->element->height, '1 : '.$this->scale);
 
     }
 }

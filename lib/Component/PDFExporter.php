@@ -58,11 +58,10 @@ class PDFExporter
             do {
                 $lpconf = array('orientation' => 'Portrait', 'pageSize' => array('height' => 29.7, 'width' => 21.0));
                 $legendPage = new PDFPage($pdf, $data, $lpconf);
-                if ($legendOverflow != null) {
-                    $legendPage->forceLegend($legendOverflow);
-                } else {
-                    $legendPage->forceLegend();
-                }
+
+                $legendPage->forceLegend();
+
+                $legendPage->setLegendOverflow($legendOverflow);
                 $legendPage->makePDFPage();
 
                 $legendOverflow = $legendPage->getLegendOverflow();

@@ -4,31 +4,28 @@ namespace Wheregroup\MapExport\CoreBundle\Entity;
 
 use Wheregroup\MapExport\CoreBundle\Component\PDFExtensions;
 
-abstract class PDFElement
+class PDFElement
 {
     const scale = 10;
 
-    /**
-     * @var PDFExtensions
-     */
-    protected $pdf;
+    public $name;
 
-    protected $x;
-    protected $y;
+    public $x;
+    public $y;
 
-    protected $width;
-    protected $height;
+    public $width;
+    public $height;
 
-    protected $data;
+    public $data;
 
-    protected $font = 'Arial';
-    protected $fontSize = '14pt';
-    protected $textColor = array('r' => 0, 'g' => 0, 'b' => 0);
-    protected $fontStyle = '';
+    public $font = 'Arial';
+    public $fontSize = '14pt';
+    public $textColor = array('r' => 0, 'g' => 0, 'b' => 0);
+    public $fontStyle = '';
 
-    public function __construct(&$pdf, $x, $y, $width, $height, $data, $style = null)
+    public function __construct($name, $x, $y, $width, $height, $data, $style = null)
     {
-        $this->pdf = $pdf;
+        $this->name = $name;
 
         $this->x = $x * self::scale;
         $this->y = $y * self::scale;
@@ -55,8 +52,6 @@ abstract class PDFElement
             $this->fontStyle .= 'U';
         }
 
-
-        $this->init();
     }
 
     public function setStyle($font = null, $fontSize = null, $textColor = null, $fontStyle = null)
@@ -84,7 +79,66 @@ abstract class PDFElement
         $this->height = $height * self::scale;
     }
 
-    abstract public function draw();
+    protected function adaptValues(PDFElement $element){
+        $this->x = $element->getX();
+        $this->y = $element->getY();
+        $this->width = $element->getWidth();
+        $this->height = $element->getHeight();
+        $this->data = $element->getData();
+        $this->font = $element->getFont();
+        $this->fontSize = $element->getFontSize();
+        $this->textColor = $element->getTextColor();
+        $this->fontStyle = $element->getFontStyle();
+    }
 
-    abstract protected function init();
+    public function getName()
+    {
+        return $this->name;
+    }
+
+    public function getX()
+    {
+        return $this->x;
+    }
+
+    public function getY()
+    {
+        return $this->y;
+    }
+
+    public function getWidth()
+    {
+        return $this->width;
+    }
+
+    public function getHeight()
+    {
+        return $this->height;
+    }
+
+    public function getData()
+    {
+        return $this->data;
+    }
+
+    public function getFont()
+    {
+        return $this->font;
+    }
+
+    public function getFontSize()
+    {
+        return $this->fontSize;
+    }
+
+    public function getFontStyle()
+    {
+        return $this->fontStyle;
+    }
+
+    public function getTextColor()
+    {
+        return $this->textColor;
+    }
+
 }

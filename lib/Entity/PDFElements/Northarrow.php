@@ -5,12 +5,22 @@ namespace Wheregroup\MapExport\CoreBundle\Entity\PDFElements;
 
 use Wheregroup\MapExport\CoreBundle\Entity\PDFElement;
 
-class Northarrow extends PDFElement
+class Northarrow
 {
     //TODO: Path to Image
     const northArrowImage = 'MapbenderPrintBundle/images/northarrow.png';
 
     protected $rotation;
+    protected $pdf;
+    protected $element;
+
+    public function __construct(&$pdf, $element)
+    {
+        $this->pdf = $pdf;
+        $this->element = $element;
+
+        $this->init();
+    }
 
     public function draw()
     {
@@ -20,12 +30,12 @@ class Northarrow extends PDFElement
             //Save image to put it on pdf
             imagepng($northArrowImage, 'newNorthArrow.png');
             //Draw image onto pdf
-            $this->pdf->Image('newNorthArrow.png', $this->x, $this->y, $this->width, $this->height, 'png');
+            $this->pdf->Image('newNorthArrow.png', $this->element->x, $this->element->y, $this->element->width, $this->element->height, 'png');
             //Removes the rotated compass rose image
             unlink('newNorthArrow.png');
         } else {
             //If there is no rotation, just draw the image
-            $this->pdf->Image(self::northArrowImage, $this->x, $this->y, $this->width, $this->height, 'png');
+            $this->pdf->Image(self::northArrowImage, $this->element->x, $this->element->y, $this->element->width, $this->element->height, 'png');
         }
 
     }
@@ -59,6 +69,6 @@ class Northarrow extends PDFElement
 
     protected function init()
     {
-        $this->rotation = $this->data['rotation'];
+        $this->rotation = $this->element->data['rotation'];
     }
 }

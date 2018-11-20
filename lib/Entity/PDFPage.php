@@ -24,10 +24,9 @@ class PDFPage
     protected $conf;
     protected $templatePath;
     protected $elements = array();
-    protected $containsLegend = false;
     protected $legendOverflow = null;
 
-    public function __construct(PDFExtensions &$pdf, $data, $conf, $page = null, $templatePath = null)
+    public function __construct(PDF_Extensions &$pdf, $data, $conf, $page = null, $templatePath = null)
     {
         $this->pdf = &$pdf;
         $this->data = $data;
@@ -54,115 +53,94 @@ class PDFPage
     public function addElement(\DOMElement $xml, $style = null)
     {
         $name = $xml->getAttribute('draw:name');
-        $x = substr($xml->getAttribute('svg:x'), 0, -3);
-        $y = substr($xml->getAttribute('svg:y'), 0, -3);
-        $width = substr($xml->getAttribute('svg:width'), 0, -3);
-        $height = substr($xml->getAttribute('svg:height'), 0, -3);
+        $x = $xml->getAttribute('svg:x');
+        $y = $xml->getAttribute('svg:y');
+        $width = $xml->getAttribute('svg:width');
+        $height = $xml->getAttribute('svg:height');
 
-        //Find out if there is a fitting class and add element to list
-        switch ($name) {
-            case 'northarrow':
-                array_push($this->elements, new Northarrow($this->pdf, $x, $y, $width, $height, $this->data));
-                break;
-            case 'map':
-                array_push($this->elements, new Map($this->pdf, $x, $y, $width, $height, $this->data));
-                break;
-            case 'overview':
-                array_push($this->elements, new Overview($this->pdf, $x, $y, $width, $height, $this->data));
-                break;
-            case 'scalebar':
-                array_push($this->elements, new Scalebar($this->pdf, $x, $y, $width, $height, $this->data));
-                break;
-            case 'date':
-                array_push($this->elements, new Date($this->pdf, $x, $y, $width, $height, $this->data, $style));
-                break;
-            case 'scale':
-                array_push($this->elements, new Scale($this->pdf, $x, $y, $width, $height, $this->data, $style));
-                break;
-            case 'legendpage_image':
-                array_push($this->elements, new LegendImage($this->pdf, $x, $y, $width, $height, $this->data));
-                break;
-            case 'legend':
-                //Test if client asks for legend
-                if ($data['printLegend'] = 1) {
-                    $this->containsLegend = true;
-
-                    $legend = new Legend($this->pdf, $x, $y, $width, $height, $this->data, $style);
-
-                    //print the remaining legend images on separate page
-                    $this->legendOverflow = $legend->getRemainingImages();
-
-                    array_push($this->elements, $legend);
-
-                }
-                break;
-            case 'extent_ll_x':
-            case 'extent_ll_y':
-            case 'extent_ur_x':
-            case 'extent_ur_y':
-                array_push($this->elements,
-                    new Extent($this->pdf, $x, $y, $width, $height, $this->data, $name, $style));
-                break;
-            default:
-                array_push($this->elements,
-                    new TextBox($this->pdf, $x, $y, $width, $height, $this->data, $name, $style));
-                break;
-
-            //var_dump($name);
-        }
-
+        //Adds the new element to list of all drawable elements on page
+        array_push($this->elements, new PDFElement($name, $x, $y, $width, $height, $this->data, $style));
 
     }
 
-    public function forceLegend($legend = null)
+    /* public function forceLegend($legendElement = null)
+     {
+         if ($legendElement == null) {
+             $legendElement = new PDFElement('legend', 0.5, 1, $this->pdf->getWidth() / 10, $this->pdf->getHeight() / 10, $this->data);
+         } else {
+             $legendElement->setPosition(0.5, 1, $this->pdf->getWidth() / 10, $this->pdf->getHeight() / 10);
+             //TODO Dies war nötig!
+             //$legendElement->setAllPositions();
+         }
+         $legendElement->setStyle('Arial', 11, array('r' => 0, 'g' => 0, 'b' => 0), 'B');
+
+         $this->legendOverflow = $legend->getRemainingImages();
+
+         array_push($this->elements, $legend);
+
+         //legendPageImage
+         $legendImageHeight = 1.5;
+         array_push($this->elements,
+             new LegendPageImage($this->pdf, $this->pdf->getWidth()/10 - $legendImageHeight * 2.5, 0 + $legendImageHeight * 0.5,
+                 0, $legendImageHeight, $this->data));
+
+     }*/
+
+    public function forceLegend()
     {
-        if ($legend == null) {
-            $legend = new Legend($this->pdf, 0.5, 1, $this->pdf->getWidth() / 10, $this->pdf->getHeight() / 10,
-                $this->data);
-        } else {
-            $legend->setPosition(0.5, 1, $this->pdf->getWidth() / 10, $this->pdf->getHeight() / 10);
-            $legend->setAllPositions();
-        }
-        $legend->setStyle('Arial', 11, array('r' => 0, 'g' => 0, 'b' => 0), 'B');
+        $style = array(
+            'fontSize' => 11,
+            'textColor' => array('r' => 0, 'g' => 0, 'b' => 0),
+            'bold' => true,
+            'italic' => false,
+            'underlined' => false
+        );
 
-        $this->containsLegend = true;
-        $this->legendOverflow = $legend->getRemainingImages();
-
-        array_push($this->elements, $legend);
+        array_push($this->elements,
+            new PDFElement('legend', 0.5, 1, $this->pdf->getWidth() / 10, $this->pdf->getHeight() / 10, $this->data,
+                $style));
 
         //legendPageImage
         $legendImageHeight = 1.5;
         array_push($this->elements,
-            new LegendImage($this->pdf, $this->pdf->getWidth() / 10 - $legendImageHeight * 2.5,
+            new PDFElement('legendpage_image', $this->pdf->getWidth() / 10 - $legendImageHeight * 2.5,
                 0 + $legendImageHeight * 0.5,
-                0, $legendImageHeight, $this->data));
-
+                0, $legendImageHeight, $this->data, $style));
     }
 
     public function containsLegend()
     {
-        return $this->containsLegend;
+        //search elements for legend
+        foreach ($this->elements as $element) {
+            if ($element->name == 'legend') {
+                return true;
+            }
+        }
+        //if there is no legend
+        return false;
     }
 
     public function getLegendOverflow()
     {
-        return $this->legendOverflow;
+        $overflow = $this->legendOverflow;
+        return $overflow;
     }
 
-    public function getPDFPage()
+    public function setLegendOverflow($overflow)
     {
-        foreach ($this->elements as $element) {
-            $element->draw();
-        }
-
-        return $this->pdf->Output();
+        $this->legendOverflow = $overflow;
     }
 
     public function makePDFPage()
     {
-        foreach ($this->elements as $element) {
-            $element->draw();
+        $pdfElementRenderer = new PDFElementRenderer($this->pdf);
+        if (isset($this->legendOverflow)) {
+            $pdfElementRenderer->draw($this->elements, $this->legendOverflow);
+        } else {
+            $pdfElementRenderer->draw($this->elements);
         }
+        $overflow = $pdfElementRenderer->getLegendOverflow();
+        $this->legendOverflow = $overflow;
     }
 
     public function getPDF()

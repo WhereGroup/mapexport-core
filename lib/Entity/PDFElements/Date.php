@@ -5,22 +5,24 @@ namespace Wheregroup\MapExport\CoreBundle\Entity\PDFElements;
 
 use Wheregroup\MapExport\CoreBundle\Entity\PDFElement;
 
-class Date extends PDFElement
+class Date
 {
-    protected function init()
-    {
-        //$this->getStyle($this->data['template']);
+    protected $pdf;
+    protected $element;
 
+    public function __construct(&$pdf, $element)
+    {
+        $this->pdf = $pdf;
+        $this->element = $element;
     }
 
     public function draw()
     {
-        $this->pdf->SetFont($this->font, $this->fontStyle);
-        $this->pdf->SetTextColor($this->textColor['r'], $this->textColor['g'], $this->textColor['b']);
-        $this->pdf->SetFontSize($this->fontSize);
+        $this->pdf->SetFont($this->element->font, $this->element->fontStyle);
+        $this->pdf->SetTextColor($this->element->textColor['r'], $this->element->textColor['g'], $this->element->textColor['b']);
+        $this->pdf->SetFontSize($this->element->fontSize);
 
-        $this->pdf->SetXY($this->x-1, $this->y);
-        $this->pdf->Cell($this->width, $this->height, date('d.m.Y'));
-
+        $this->pdf->SetXY($this->element->x - 1, $this->element->y);
+        $this->pdf->Cell($this->element->width, $this->element->height, date('d.m.Y'));
     }
 }
