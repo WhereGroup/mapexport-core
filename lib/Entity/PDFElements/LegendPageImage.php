@@ -19,13 +19,6 @@ class LegendPageImage
     {
         $this->pdf = $pdf;
         $this->element = $element;
-
-        $this->init();
-    }
-
-    protected function init()
-    {
-
     }
 
     public function draw()

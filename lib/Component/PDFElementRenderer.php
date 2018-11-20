@@ -13,7 +13,7 @@ use Wheregroup\MapExport\CoreBundle\Entity\PDFElements\Scale;
 use Wheregroup\MapExport\CoreBundle\Entity\PDFElements\LegendPageImage;
 use Wheregroup\MapExport\CoreBundle\Entity\PDFElements\Legend;
 use Wheregroup\MapExport\CoreBundle\Entity\PDFElements\Extent;
-use Wheregroup\MapExport\CoreBundle\Entity\PDFElements\Comment;
+use Wheregroup\MapExport\CoreBundle\Entity\PDFElements\TextBox;
 
 class PDFElementRenderer
 {
@@ -55,9 +55,9 @@ class PDFElementRenderer
                 case 'legend':
                     //Test if client asks for legend
                     if ($data['printLegend'] = 1) {
-                        if(isset($legendImages)) {
+                        if (isset($legendImages)) {
                             $object = new Legend($this->pdf, $element, $legendImages);
-                        } else  {
+                        } else {
                             $object = new Legend($this->pdf, $element);
                         }
                         //print the remaining legend images on separate page
@@ -71,10 +71,9 @@ class PDFElementRenderer
                     $object = new Extent($this->pdf, $element);
                     break;
                 default:
-                    if (strpos($name, 'comment') === 0) {
-                        $object = new Comment($this->pdf, $element);
-                        break;
-                    }
+                    $object = new TextBox($this->pdf, $element);
+                    break;
+
             }
             if (isset($object)) {
                 $object->draw();
