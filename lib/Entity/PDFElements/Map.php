@@ -4,9 +4,9 @@ namespace Wheregroup\MapExport\CoreBundle\Entity\PDFElements;
 
 
 use Wheregroup\MapExport\CoreBundle\Component\FeatureRenderer;
-use Wheregroup\MapExport\CoreBundle\Component\GeoJSONAdapter;
 use Wheregroup\MapExport\CoreBundle\Component\HTTPClient;
 use Wheregroup\MapExport\CoreBundle\Component\MapExporter;
+use Wheregroup\MapExport\CoreBundle\Component\PDFExtensions;
 use Wheregroup\MapExport\CoreBundle\Component\RasterRenderer;
 use Wheregroup\MapExport\CoreBundle\Entity\PDFElement;
 
@@ -21,7 +21,7 @@ class Map
     protected $element;
     protected $pdf;
 
-    public function __construct(&$pdf, $element)
+    public function __construct(PDFExtensions &$pdf, PDFElement $element)
     {
         $this->pdf = $pdf;
         $this->element = $element;

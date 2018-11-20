@@ -4,6 +4,7 @@ namespace Wheregroup\MapExport\CoreBundle\Entity\PDFElements;
 
 
 use Wheregroup\MapExport\CoreBundle\Component\HTTPClient;
+use Wheregroup\MapExport\CoreBundle\Component\PDFExtensions;
 use Wheregroup\MapExport\CoreBundle\Entity\PDFElement;
 
 class Legend
@@ -14,7 +15,7 @@ class Legend
     protected $pdf;
     protected $element;
 
-    public function __construct(&$pdf, $element, $legendImages = null)
+    public function __construct(PDFExtensions &$pdf, PDFElement $element, $legendImages = null)
     {
         $this->pdf = $pdf;
         $this->element = $element;

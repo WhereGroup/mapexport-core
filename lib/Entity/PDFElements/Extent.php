@@ -3,6 +3,7 @@
 namespace Wheregroup\MapExport\CoreBundle\Entity\PDFElements;
 
 
+use Wheregroup\MapExport\CoreBundle\Component\PDFExtensions;
 use Wheregroup\MapExport\CoreBundle\Entity\PDFElement;
 
 class Extent
@@ -11,7 +12,7 @@ class Extent
     protected $pdf;
     protected $element;
 
-    public function __construct(&$pdf, $element)
+    public function __construct(PDFExtensions &$pdf, PDFElement $element)
     {
         $this->pdf = $pdf;
         $this->element = $element;
