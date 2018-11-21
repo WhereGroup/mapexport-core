@@ -20,9 +20,9 @@ class PDFExporter
         $this->user = $this->getUser();
     }
 
-    public function createPDFFromTemplate($data)
+    public function createPDFFromTemplate(MapData $data)
     {
-        $templatePath = $this->resourceDir . '/templates/' . $data['template'];
+        $templatePath = $this->resourceDir . '/templates/' . $data->getTemplate();
 
         $odgParser = new OdgParser();
 
@@ -30,7 +30,7 @@ class PDFExporter
         $conf = $odgParser->getConf($templatePath . '.odg');
 
         //Create PDF
-        $pdf = new PDF_Extensions();
+        $pdf = new PDFExtensions();
         $pdfPages = array();
 
         //Go through pages of template and fill pdf with objects defined there
@@ -53,7 +53,7 @@ class PDFExporter
 
         //Add new legend page if there was no legend
         //if client wants printed legend and there was no place for it OR if there is unhandled legend overflow
-        if ((array_key_exists('printLegend', $data) && $data['printLegend'] == 1 && !$legendExists) || $legendOverflow != null) {
+        if (($data->getPrintLegend() == 1 && !$legendExists) || $legendOverflow != null) {
             //add legend pages as long as there is unhandled legend overflow
             do {
                 $lpconf = array('orientation' => 'Portrait', 'pageSize' => array('height' => 29.7, 'width' => 21.0));

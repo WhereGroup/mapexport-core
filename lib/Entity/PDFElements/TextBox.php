@@ -7,7 +7,7 @@ use Wheregroup\MapExport\CoreBundle\Entity\PDFElement;
 
 class TextBox
 {
-    protected $comment;
+    protected $content;
     protected $pdf;
     protected $element;
 
@@ -21,13 +21,15 @@ class TextBox
 
     protected function init()
     {
-        if (array_key_exists($this->element->name, $this->element->data['extra'])) {
-            $this->comment = $this->element->data['extra'][$this->element->name];
+        //Todo: getting content from mapData['extra'] should be enough
+        /*if (array_key_exists($this->element->name, $this->element->data['extra'])) {
+            $this->content = $this->element->data['extra'][$this->element->name];
         } else {
             if (array_key_exists($this->element->name, $this->element->data)) {
-                $this->comment = $this->element->data[$this->element->name];
+                $this->content = $this->element->data[$this->element->name];
             }
-        }
+        }*/
+        $this->content = $this->element->data->getFromExtra($this->element->name);
 
     }
 
@@ -38,6 +40,6 @@ class TextBox
         $this->pdf->SetFontSize($this->element->fontSize);
 
         $this->pdf->SetXY($this->element->x - 1, $this->element->y);
-        $this->pdf->Cell($this->element->width, $this->element->height, $this->comment);
+        $this->pdf->Cell($this->element->width, $this->element->height, $this->content);
     }
 }

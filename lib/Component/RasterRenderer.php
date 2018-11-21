@@ -7,8 +7,11 @@ use Wheregroup\MapExport\CoreBundle\Entity\MapCanvas;
 
 class RasterRenderer
 {
+    const MAX_REQUEST_SIZE = 1048576; //1024x1024 Pixel
     //const MAX_REQUEST_SIZE = 262144; //512x512 Pixel
-    const MAX_REQUEST_SIZE = null; //max request size switched off
+    //const MAX_REQUEST_SIZE = 65536; //256x256 Pixel
+    //const MAX_REQUEST_SIZE = 16384; //128x128 Pixel
+    //const MAX_REQUEST_SIZE = null; //max request size switched off
 
     protected $httpClient;
 

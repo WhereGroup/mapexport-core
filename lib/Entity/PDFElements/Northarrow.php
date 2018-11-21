@@ -2,7 +2,6 @@
 
 namespace Wheregroup\MapExport\CoreBundle\Entity\PDFElements;
 
-
 use Wheregroup\MapExport\CoreBundle\Component\PDFExtensions;
 use Wheregroup\MapExport\CoreBundle\Entity\PDFElement;
 
@@ -70,6 +69,6 @@ class Northarrow
 
     protected function init()
     {
-        $this->rotation = $this->element->data['rotation'];
+        $this->rotation = $this->element->data->getRotation();
     }
 }

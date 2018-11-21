@@ -2,7 +2,6 @@
 
 namespace Wheregroup\MapExport\CoreBundle\Entity\PDFElements;
 
-
 use Wheregroup\MapExport\CoreBundle\Component\PDFExtensions;
 use Wheregroup\MapExport\CoreBundle\Entity\PDFElement;
 

@@ -49,7 +49,7 @@ class Scalebar
 
     protected function init()
     {
-        $this->scale = $this->element->data['scale_select'];
+        $this->scale = $this->element->data->getScale();
     }
 
 }

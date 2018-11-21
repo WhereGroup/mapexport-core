@@ -4,17 +4,7 @@ namespace Wheregroup\MapExport\CoreBundle\Entity;
 
 
 use Wheregroup\MapExport\CoreBundle\Component\PDFExtensions;
-use Wheregroup\MapExport\CoreBundle\Entity\PDFElements\TextBox;
-use Wheregroup\MapExport\CoreBundle\Entity\PDFElements\Date;
-use Wheregroup\MapExport\CoreBundle\Entity\PDFElements\Extent;
-use Wheregroup\MapExport\CoreBundle\Entity\PDFElements\Legend;
-use Wheregroup\MapExport\CoreBundle\Entity\PDFElements\LegendImage;
-use Wheregroup\MapExport\CoreBundle\Entity\PDFElements\Map;
-use Wheregroup\MapExport\CoreBundle\Entity\PDFElements\Northarrow;
-use Wheregroup\MapExport\CoreBundle\Entity\PDFElements\Overview;
-use Wheregroup\MapExport\CoreBundle\Entity\PDFElements\Scale;
-use Wheregroup\MapExport\CoreBundle\Entity\PDFElements\Scalebar;
-use Wheregroup\MapExport\CoreBundle\Entity\PDFElements\Title;
+use Wheregroup\MapExport\CoreBundle\Component\PDFElementRenderer;
 
 class PDFPage
 {
@@ -26,7 +16,7 @@ class PDFPage
     protected $elements = array();
     protected $legendOverflow = null;
 
-    public function __construct(PDF_Extensions &$pdf, $data, $conf, $page = null, $templatePath = null)
+    public function __construct(PDFExtensions &$pdf, $data, $conf, $page = null, $templatePath = null)
     {
         $this->pdf = &$pdf;
         $this->data = $data;
@@ -62,29 +52,6 @@ class PDFPage
         array_push($this->elements, new PDFElement($name, $x, $y, $width, $height, $this->data, $style));
 
     }
-
-    /* public function forceLegend($legendElement = null)
-     {
-         if ($legendElement == null) {
-             $legendElement = new PDFElement('legend', 0.5, 1, $this->pdf->getWidth() / 10, $this->pdf->getHeight() / 10, $this->data);
-         } else {
-             $legendElement->setPosition(0.5, 1, $this->pdf->getWidth() / 10, $this->pdf->getHeight() / 10);
-             //TODO Dies war nötig!
-             //$legendElement->setAllPositions();
-         }
-         $legendElement->setStyle('Arial', 11, array('r' => 0, 'g' => 0, 'b' => 0), 'B');
-
-         $this->legendOverflow = $legend->getRemainingImages();
-
-         array_push($this->elements, $legend);
-
-         //legendPageImage
-         $legendImageHeight = 1.5;
-         array_push($this->elements,
-             new LegendPageImage($this->pdf, $this->pdf->getWidth()/10 - $legendImageHeight * 2.5, 0 + $legendImageHeight * 0.5,
-                 0, $legendImageHeight, $this->data));
-
-     }*/
 
     public function forceLegend()
     {

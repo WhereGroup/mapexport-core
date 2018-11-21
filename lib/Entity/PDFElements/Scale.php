@@ -22,7 +22,7 @@ class Scale
     protected function init()
     {
         //$this->getStyle($this->data['template']);
-        $this->scale = $this->element->data['scale_select'];
+        $this->scale = $this->element->data->getScale();
 
     }
 

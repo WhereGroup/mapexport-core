@@ -2,7 +2,6 @@
 
 namespace Wheregroup\MapExport\CoreBundle\Entity\PDFElements;
 
-
 use Wheregroup\MapExport\CoreBundle\Component\HTTPClient;
 use Wheregroup\MapExport\CoreBundle\Component\PDFExtensions;
 use Wheregroup\MapExport\CoreBundle\Entity\PDFElement;
@@ -30,12 +29,13 @@ class Legend
 
     protected function init()
     {
-        if (array_key_exists('legends', $this->element->data)) {
+        $legends = $this->element->data->getLegends();
+        if ($legends != null) {
             $httpClient = new HTTPClient();
 
             //fill legendImages with all images, even if they might not fit
             $index = 0;
-            foreach ($this->element->data['legends'] as $legend) {
+            foreach ($legends as $legend) {
                 $result = $httpClient->open(current($legend));
                 $this->legendImages[$index]['title'] = key($legend);
                 $this->legendImages[$index]['img'] = imagecreatefromstring($result->getData());

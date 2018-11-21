@@ -22,31 +22,31 @@ class MapExporter
         $this->FeatureRenderer = $FeatureRenderer;
     }
 
-    public function buildMap($data, $width = null, $height = null)
+    public function buildMap(MapData $data, $width = null, $height = null)
     {
-        $mapData = new MapData();
-        $mapData->fillFromGeoJSON($data);
+        //$mapData = new MapData();
+        //$mapData->fillFromGeoJSON($data);
 
         if ($width == null) {
-            $width = $mapData->getWidth();
+            $width = $data->getWidth();
         }
         if ($height == null) {
-            $height = $mapData->getHeight();
+            $height = $data->getHeight();
         }
 
-        if ($mapData->getRotation() != null) {
-            $angle = $mapData->getRotation();
+        if ($data->getRotation() != null) {
+            $angle = $data->getRotation();
         } else {
             $angle = 0;
         }
 
-        $extentheight = $mapData->getExtentHeight();
+        $extentheight = $data->getExtentHeight();
 
         //If aspect ratio of bounding box and image don't match, make bounding box wider
         $extentwidth = $extentheight * ($width / $height);
 
-        $centerx = $mapData->getCenterX();
-        $centery = $mapData->getCenterY();
+        $centerx = $data->getCenterX();
+        $centery = $data->getCenterY();
 
         //Set scale for resizing rotated image
         $widthScale = 1;
@@ -68,11 +68,11 @@ class MapExporter
         $canvas = new MapCanvas(round($width*$widthScale), round($height*$heightScale), $extentwidth*$widthScale, $extentheight*$heightScale, $centerx, $centery);
 
         //Draw wms layers
-        $requests = $mapData->getLayers();
+        $requests = $data->getLayers();
         $canvas = $this->RasterRenderer->drawAllLayers($canvas, $requests, $location, round($width*$widthScale), round($height*$heightScale));
 
         //Draw features
-        $features = $mapData->getFeatures();
+        $features = $data->getFeatures();
         if (isset($features)) {
             $canvas = $this->FeatureRenderer->drawAllFeatures($canvas, $features);
         }

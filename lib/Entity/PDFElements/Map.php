@@ -2,7 +2,6 @@
 
 namespace Wheregroup\MapExport\CoreBundle\Entity\PDFElements;
 
-
 use Wheregroup\MapExport\CoreBundle\Component\FeatureRenderer;
 use Wheregroup\MapExport\CoreBundle\Component\HTTPClient;
 use Wheregroup\MapExport\CoreBundle\Component\MapExporter;
@@ -32,8 +31,8 @@ class Map
     public function draw()
     {
 
-        $width = round($this->element->width / 25.4 * $this->element->data['quality']);
-        $height = round($this->element->height / 25.4 * $this->element->data['quality']);
+        $width = round($this->element->width / 25.4 * $this->element->data->getQuality());
+        $height = round($this->element->height / 25.4 * $this->element->data->getQuality());
 
         $map = $this->mapExporter->buildMap($this->element->data, $width, $height);
         $this->img = $map->getImage();

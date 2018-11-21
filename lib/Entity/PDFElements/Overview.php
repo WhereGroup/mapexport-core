@@ -2,7 +2,6 @@
 
 namespace Wheregroup\MapExport\CoreBundle\Entity\PDFElements;
 
-
 class Overview extends Map
 {
     protected function init()
@@ -14,29 +13,25 @@ class Overview extends Map
 
     protected function createOverview()
     {
+        //Build new MapData
+        $data = new MapData();
+        $data->setWidth($this->element->width);
+        $data->setHeight($this->element->height);
 
-        //Build new $data array
-        $data = array();
-        //Imagesize
-        $data['width'] = $this->element->width;
-        $data['height'] = $this->element->height;
+        $data->setFormat('png');
+        $data->setQuality($this->element->data->getQuality());
 
-        $data['format'] = 'png';
-        $data['quality'] = $this->element->data['quality'];
+        $data->setCenterX($this->element->data->getCenterX());
+        $data->setCenterY($this->element->data->getCenterY());
 
-        $data['centerx'] = $this->element->data['center']['x'];
-        $data['centery'] = $this->element->data['center']['y'];
+        $overview = $this->element->data->getOverview();
+        $data->setExtentWidth($this->element->width * $overview[0]['scale'] / 1000);
+        $data->setExtentHeight($this->element->height * $overview[0]['scale'] / 1000);
 
-        //Get extent of overview bounding box
-        $data['extentwidth'] = $this->element->width * $this->element->data['overview'][0]['scale'] / 1000;
-        $data['extentheight'] = $this->element->height * $this->element->data['overview'][0]['scale'] / 1000;
+        $data->setLayers($overview);
 
-
-        //WMS service gets overlay
-        $data['requests'] = $this->element->data['overview'];
-
-        //Map Outline
-        $data['vectorLayers'][0] = array(
+        $extentFeature =  $this->element->data->getExtentFeature();
+        $features[0] = array(
             'type' => 'GeoJSON+Style',
             'opacity' => 1,
             'geometries' => array(
@@ -44,10 +39,10 @@ class Overview extends Map
                     'type' => 'Polygon',
                     'coordinates' => array(
                         array(
-                            array_values($this->element->data['extent_feature'][0]),
-                            array_values($this->element->data['extent_feature'][1]),
-                            array_values($this->element->data['extent_feature'][2]),
-                            array_values($this->element->data['extent_feature'][3])
+                            array_values($extentFeature[0]),
+                            array_values($extentFeature[1]),
+                            array_values($extentFeature[2]),
+                            array_values($extentFeature[3])
                         )
                     ),
                     'style' => array(
@@ -60,7 +55,9 @@ class Overview extends Map
                 )
             )
         );
+        $data->setFeatures($features);
 
-        $this->data = $data;
+        $this->element->setData($data);
+
     }
 }

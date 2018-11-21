@@ -3,6 +3,7 @@
 namespace Wheregroup\MapExport\CoreBundle\Entity;
 
 use Wheregroup\MapExport\CoreBundle\Component\PDFExtensions;
+use Wheregroup\MapExport\CoreBundle\Component\MapData;
 
 class PDFElement
 {
@@ -23,7 +24,7 @@ class PDFElement
     public $textColor = array('r' => 0, 'g' => 0, 'b' => 0);
     public $fontStyle = '';
 
-    public function __construct($name, $x, $y, $width, $height, $data, $style = null)
+    public function __construct($name, $x, $y, $width, $height, MapData $data, $style = null)
     {
         $this->name = $name;
 
@@ -79,7 +80,8 @@ class PDFElement
         $this->height = $height * self::scale;
     }
 
-    protected function adaptValues(PDFElement $element){
+    protected function adaptValues(PDFElement $element)
+    {
         $this->x = $element->getX();
         $this->y = $element->getY();
         $this->width = $element->getWidth();
@@ -139,6 +141,11 @@ class PDFElement
     public function getTextColor()
     {
         return $this->textColor;
+    }
+
+    public function setData($data)
+    {
+        $this->data = $data;
     }
 
 }
