@@ -7,11 +7,11 @@ use Wheregroup\MapExport\CoreBundle\Entity\MapCanvas;
 
 class RasterRenderer
 {
-    const MAX_REQUEST_SIZE = 1048576; //1024x1024 Pixel
-    //const MAX_REQUEST_SIZE = 262144; //512x512 Pixel
-    //const MAX_REQUEST_SIZE = 65536; //256x256 Pixel
-    //const MAX_REQUEST_SIZE = 16384; //128x128 Pixel
-    //const MAX_REQUEST_SIZE = null; //max request size switched off
+
+    const MAX_REQUEST_WIDTH = 512;
+    const MAX_REQUEST_HEIGHT = 512;
+
+    const MARGIN = 32;
 
     protected $httpClient;
 
@@ -21,79 +21,77 @@ class RasterRenderer
 
     }
 
-    /**
-     * Draws the returned image of a wms request on a MapCanvas
-     *
-     * @param MapCanvas $canvas
-     * @param $layer
-     * @return mixed
-     */
-
     public function drawLayer(MapCanvas $canvas, $layer)
     {
-        $img = $canvas->getImage();
+        $width = $canvas->getWidth();
+        $height = $canvas->getHeight();
 
-        $imageWidth = $this->getWidthFromURL($layer['url']);
-        $imageHeight = $this->getHeightFromURL($layer['url']);
+        //draw layer in one piece
+        $layer['url'] = $this->getWMS($layer['url'], $width, $height, $canvas->getBB());
+        $image = $this->getImageFromLayer($layer, $width, $height);
+        $canvas->addLayer($image);
 
-        //test if image is too large and should be tiled
-        if ($imageWidth * $imageHeight > self::MAX_REQUEST_SIZE && self::MAX_REQUEST_SIZE != null) {
-            //If image is too large, split it
-            $canvas = $this->drawTiledLayer($canvas, $layer);
-        } else {
-            //If image is not too large, request it from WMS and draw
-            $layerImage = $this->getImageFromLayer($layer, $imageWidth, $imageHeight);
-
-            //Compare bounding boxes of full canvas and image part to get pixel coordinates
-            $BB = $this->getBBFromURL($layer['url']);
-            $canvasBB = $canvas->getBB();
-
-            $x = round($imageWidth * (($BB[0] - $canvasBB[0]) / ($BB[2] - $BB[0])));
-            $y = $canvas->getHeight() - round($imageHeight * (($BB[1] - $canvasBB[1]) / ($BB[3] - $BB[1]))) - $this->getHeightFromURL($layer['url']);
-
-            //draw layer on canvas
-            imagecopy($img, $layerImage, $x, $y, 0, 0, $imageWidth, $imageHeight);
-
-            $canvas->setImage($img);
-        }
         return $canvas;
     }
 
     /**
-     * Splits WMS Request into 2x2 requests
+     * Cuts the layer into pieces and requests each piece separately.
+     * Each request gets a tile that is slightly larger than it has to be, which then gets cropped.
+     * This is necessary because a tile could contain information that has been cropped, but the adjacent tile might not contain the missing part.
      *
      * @param MapCanvas $canvas
      * @param $layer
-     * @return mixed
+     * @return MapCanvas
      */
     public function drawTiledLayer(MapCanvas $canvas, $layer)
     {
-        //Create new image as big as layer
-        $width = $this->getWidthFromURL($layer['url']);
-        $height = $this->getHeightFromURL($layer['url']);
-        $image = @imagecreatetruecolor($width, $height)
+        //width of whole image
+        $imageWidth = $canvas->getWidth();
+        $imageHeight = $canvas->getHeight();
+
+        //number of tiles in each row and column
+        $horTiles = round($imageWidth / self::MAX_REQUEST_WIDTH);
+        $verTiles = round($imageHeight / self::MAX_REQUEST_HEIGHT);
+
+        //width of tiles on map
+        $tileWidth = $canvas->getExtentWidth() / ($horTiles + 1);
+        $tileHeight = $canvas->getExtentHeight() / ($verTiles + 1);
+
+        //width of tiles in pixel (original and with added margin)
+        $imageTileWidthO = round($imageWidth / ($horTiles + 1));
+        $imageTileHeightO = round($imageHeight / ($verTiles + 1));
+        $imageTileWidth = round($imageWidth / ($horTiles + 1)) + self::MARGIN * 2;
+        $imageTileHeight = round($imageHeight / ($verTiles + 1)) + self::MARGIN * 2;
+
+        $margin = $canvas->getPixelToMap(self::MARGIN);
+
+        //create new image resource for tiles
+        $croppedImage = @imagecreatetruecolor($imageTileWidthO, $imageTileHeightO)
         or die("Can not create GD-Image");
+        imagealphablending($croppedImage, false);
+        imagesavealpha($croppedImage, true);
 
-        //Set image background color to white
-        $white = imagecolorallocate($image, 255, 255, 255);
-        imagefill($image, 0, 0, $white);
+        //loop that gets tiles and places them
+        for ($i = 0; $i <= $verTiles; $i++) {
+            for ($j = 0; $j <= $horTiles; $j++) {
+                //create url with changed extent
+                $bb = $canvas->getBBofTile($tileWidth, $tileHeight, $j, $i);
 
-        //Get WMS Request URLs for four parts of the original layer
-        $tiles = $this->splitWMS($layer['url']);
+                //add margin
+                $bb = $this->addBBMargin($bb, $margin);
 
-        $tileCols = count($tiles);
-        $tileRows = count($tiles[0]);
+                //get image
+                $layer['url'] = $this->getWMS($layer['url'], $imageTileWidth, $imageTileHeight, $bb);
+                $image = $this->getImageFromLayer($layer, $imageTileWidth, $imageTileHeight);
 
-        //Draw Map on new image at the right coordinates
-        for ($i = 0; $i < $tileCols; $i++) {
-            for ($j = 0; $j < $tileRows; $j++) {
-                $layerCache = $layer;
-                $layerCache['url'] = $tiles[$i][$j];
+                //cut margin
+                imagecopyresampled($croppedImage, $image, 0, 0, self::MARGIN, self::MARGIN, $imageTileWidthO,
+                    $imageTileHeightO, $imageTileWidthO, $imageTileHeightO);
 
-                $canvas = $this->drawLayer($canvas, $layerCache);
+                //draw image on canvas
+                $canvas->addTile($croppedImage, $j, $verTiles - $i);
             }
         }
-
         return $canvas;
     }
 
@@ -102,51 +100,43 @@ class RasterRenderer
      *
      * @param MapCanvas $canvas
      * @param $requests
-     * @param $location
-     * @param $width
-     * @param $height
      * @return mixed|MapCanvas
      */
-    public function drawAllLayers(MapCanvas $canvas, $requests, $location, $width, $height)
+    public function drawAllLayers(MapCanvas $canvas, $requests)
     {
-
         foreach ($requests as $layer) {
             //Filter for wms requests only
             if (isset($layer['url'])) {
-                $layer['url'] = $this->getWMS($layer['url'], $width, $height, $this->getBB($location));
-                $canvas = ($this->drawLayer($canvas, $layer));
+                //$canvas = ($this->drawLayer($canvas, $layer));
+                if ($canvas->getWidth() <= self::MAX_REQUEST_WIDTH && $canvas->getHeight() <= self::MAX_REQUEST_HEIGHT) {
+                    $canvas = ($this->drawLayer($canvas, $layer));
+                } else {
+                    $canvas = ($this->drawTiledLayer($canvas, $layer));
+                }
             }
         }
-
         return $canvas;
     }
 
     protected function getImageFromLayer($layer, $width = null, $height = null)
     {
         $result = $this->httpClient->open($layer['url']);
-        $image = $result->getData();
-        if (is_resource($image)) {
-            $layerImage = imagecreatefromstring($result->getData());
+        $layerImage = imagecreatefromstring($result->getData());
 
-            if ($width != null && $height != null) {
-                $layerImage = imagescale($layerImage, $width, $height);
-            }
-
-            imagealphablending($layerImage, false);
-            imagesavealpha($layerImage, true);
-
-            //Set opacity
-            if (array_key_exists('opacity', $layer)) {
-                $transparency = 1 - $layer['opacity'];
-                imagefilter($layerImage, IMG_FILTER_COLORIZE, 0, 0, 0, 127 * $transparency);
-            }
-
-            return $layerImage;
-        } else {
-            //TODO Logger
-            return null;
+        if ($width != null && $height != null) {
+            $layerImage = imagescale($layerImage, $width, $height);
         }
 
+        imagealphablending($layerImage, false);
+        imagesavealpha($layerImage, true);
+
+        //Set opacity
+        if (array_key_exists('opacity', $layer)) {
+            $transparency = 1 - $layer['opacity'];
+            imagefilter($layerImage, IMG_FILTER_COLORIZE, 0, 0, 0, 127 * $transparency);
+        }
+
+        return $layerImage;
     }
 
     /**
@@ -199,33 +189,6 @@ class RasterRenderer
         return $url;
     }
 
-    /**
-     * Takes a WMS URL and splits it into $cols x $rows of smaller requests (default: 2 x 2)
-     *
-     * @param $url
-     * @param int $cols
-     * @param int $rows
-     * @return array
-     */
-    protected function splitWMS($url, $cols = 2, $rows = 2)
-    {
-        $width = round($this->getWidthFromURL($url) / $cols);
-        $height = round($this->getHeightFromURL($url) / $rows);
-        $BB = $this->getBBFromURL($url);
-        $BBArray = $this->splitBB($BB, $cols, $rows);
-
-        $urlArray = array(array());
-
-        //Get a WMS request URL for every bounding box
-        for ($i = 0; $i < $cols; $i++) {
-            for ($j = 0; $j < $rows; $j++) {
-                $urlArray[$i][$j] = $this->getWMS($url, $width, $height, $BBArray[$i][$j]);
-            }
-        }
-
-        return $urlArray;
-    }
-
     protected function getWidthFromURL($url)
     {
         $urlarray = parse_url($url);
@@ -244,35 +207,6 @@ class RasterRenderer
         return $query['HEIGHT'];
     }
 
-    /**
-     * Splits bounding box into array of $cols x $rows of bounding boxes (default: 2 x 2)
-     *
-     * @param $BB
-     * @param int $cols
-     * @param int $rows
-     * @return array
-     */
-    protected function splitBB($BB, $cols = 2, $rows = 2)
-    {
-        //Get size
-        $width = ($BB[2] - $BB[0]) / $cols;
-        $height = ($BB[3] - $BB[1]) / $rows;
-
-        $newBB = array(array());
-
-        for ($i = 0; $i < $cols; $i++) {
-            for ($j = 0; $j < $rows; $j++) {
-                $newBB[$i][$j][0] = ($i * $width) + $BB[0];
-                $newBB[$i][$j][1] = ($j * $height) + $BB[1];
-                $newBB[$i][$j][2] = (($i + 1) * $width) + $BB[0];
-                $newBB[$i][$j][3] = (($j + 1) * $height) + $BB[1];
-            }
-        }
-
-        return $newBB;
-
-    }
-
     protected function getBBFromURL($url)
     {
         $urlarray = parse_url($url);
@@ -282,46 +216,14 @@ class RasterRenderer
         return explode(',', $query['BBOX']);
     }
 
-    /**
-     * Returns the bounding box that is defined by the center coordinates and extent values in $data
-     *
-     * @param $location
-     * @return array
-     */
-    public function getBB($location)
+    protected function addBBMargin($bb, $margin)
     {
-        if (isset($location['extentwidth'])) {
-            $extentwidth = $location['extentwidth'];
-        } else {
-            $extentwidth = $location['extent']['width'];
-        }
+        $bb[0] -= $margin;
+        $bb[1] -= $margin;
+        $bb[2] += $margin;
+        $bb[3] += $margin;
 
-        if (isset($location['extentheight'])) {
-            $extentheight = $location['extentheight'];
-        } else {
-            $extentheight = $location['extent']['height'];
-        }
-
-        if (isset($location['centerx'])) {
-            $centerx = $location['centerx'];
-        } else {
-            $centerx = $location['center']['x'];
-        }
-
-        if (isset($location['centery'])) {
-            $centery = $location['centery'];
-        } else {
-            $centery = $location['center']['y'];
-        }
-
-        $BB = array();
-        array_push($BB, $centerx - $extentwidth / 2);
-        array_push($BB, $centery - $extentheight / 2);
-        array_push($BB, $centerx + $extentwidth / 2);
-        array_push($BB, $centery + $extentheight / 2);
-
-        return $BB;
+        return $bb;
     }
-
 
 }
