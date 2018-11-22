@@ -116,6 +116,11 @@ class HTTPClient
     /**
      * Shortcut Method
      */
+    /**
+     * @param $url
+     * @return HTTPResult
+     * @throws \Exception
+     */
     public function open($url)
     {
         curl_setopt($this->ch, CURLOPT_URL, $url);
@@ -130,6 +135,7 @@ class HTTPClient
         }
 
         if ($this->connecttimeout) {
+            curl_setopt($this->ch, CURLOPT_CONNECTTIMEOUT, $this->connecttimeout);
             curl_setopt($this->ch, CURLOPT_CONNECTTIMEOUT, $this->connecttimeout);
         }
 

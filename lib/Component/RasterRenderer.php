@@ -8,8 +8,8 @@ use Wheregroup\MapExport\CoreBundle\Entity\MapCanvas;
 class RasterRenderer
 {
 
-    const MAX_REQUEST_WIDTH = 512;
-    const MAX_REQUEST_HEIGHT = 512;
+    const MAX_REQUEST_WIDTH = 1024;
+    const MAX_REQUEST_HEIGHT = 1024;
 
     const MARGIN = 32;
 

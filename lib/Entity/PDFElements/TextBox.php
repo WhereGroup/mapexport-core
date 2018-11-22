@@ -21,22 +21,14 @@ class TextBox
 
     protected function init()
     {
-        //Todo: getting content from mapData['extra'] should be enough
-        /*if (array_key_exists($this->element->name, $this->element->data['extra'])) {
-            $this->content = $this->element->data['extra'][$this->element->name];
-        } else {
-            if (array_key_exists($this->element->name, $this->element->data)) {
-                $this->content = $this->element->data[$this->element->name];
-            }
-        }*/
         $this->content = $this->element->data->getFromExtra($this->element->name);
-
     }
 
     public function draw()
     {
         $this->pdf->SetFont($this->element->font, $this->element->fontStyle);
-        $this->pdf->SetTextColor($this->element->textColor['r'], $this->element->textColor['g'], $this->element->textColor['b']);
+        $this->pdf->SetTextColor($this->element->textColor['r'], $this->element->textColor['g'],
+            $this->element->textColor['b']);
         $this->pdf->SetFontSize($this->element->fontSize);
 
         $this->pdf->SetXY($this->element->x - 1, $this->element->y);

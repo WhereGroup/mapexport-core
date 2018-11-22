@@ -3,6 +3,7 @@
 namespace Wheregroup\MapExport\CoreBundle\Entity;
 
 
+use Exception;
 use Wheregroup\MapExport\CoreBundle\Component\PDFExtensions;
 use Wheregroup\MapExport\CoreBundle\Component\PDFElementRenderer;
 
@@ -33,7 +34,11 @@ class PDFPage
         $this->pdf->AddPage($this->conf['orientation'],
             array($this->conf['pageSize']['width'] * 10, $this->conf['pageSize']['height'] * 10));
         if ($this->templatePath != null) {
-            $this->pdf->setSourceFile($this->templatePath . '.pdf');
+            try {
+                $this->pdf->setSourceFile($this->templatePath . '.pdf');
+            } catch (Exception $e) {
+                echo 'Could not open template';
+            }
             $page = $this->pdf->importPage($this->page);
             $this->pdf->useTemplate($page);
         }

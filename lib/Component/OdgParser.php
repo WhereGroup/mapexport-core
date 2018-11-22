@@ -62,11 +62,7 @@ class OdgParser
 
         $pages =  $xpath->query('//office:drawing')->item(0)->childNodes;
 
-        //count number of pages
-        $counter = 0;
-        foreach ($pages as $page){
-            $counter++;
-        }
+        $counter = $pages->length;
         return $counter;
     }
 

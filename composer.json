@@ -6,7 +6,10 @@
   "require": {
     "php": ">=5.5",
     "ext-gd": ">=5.5",
-    "ext-fileinfo": ">=5.5"
+    "ext-fileinfo": ">=5.5",
+    "ext-dom": ">=5",
+    "ext-json": "*",
+    "ext-zip": ">=5"
   },
   "require-dev": {
     "phpunit/phpunit": "^4"

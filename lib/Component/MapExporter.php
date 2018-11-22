@@ -24,9 +24,6 @@ class MapExporter
 
     public function buildMap(MapData $data, $width = null, $height = null)
     {
-        //$mapData = new MapData();
-        //$mapData->fillFromGeoJSON($data);
-
         if ($width == null) {
             $width = $data->getWidth();
         }
@@ -57,19 +54,12 @@ class MapExporter
             $heightScale = $scaleArray[1];
         }
 
-        $location = array(
-            'extentwidth' => $extentwidth*$widthScale,
-            'extentheight' => $extentheight*$heightScale,
-            'centerx' => $centerx,
-            'centery' => $centery
-        );
-
         //Initialize MapCanvas
         $canvas = new MapCanvas(round($width*$widthScale), round($height*$heightScale), $extentwidth*$widthScale, $extentheight*$heightScale, $centerx, $centery);
 
         //Draw wms layers
         $requests = $data->getLayers();
-        $canvas = $this->RasterRenderer->drawAllLayers($canvas, $requests, $location, round($width*$widthScale), round($height*$heightScale));
+        $canvas = $this->RasterRenderer->drawAllLayers($canvas, $requests);
 
         //Draw features
         $features = $data->getFeatures();

@@ -7,98 +7,31 @@ class MapData
 {
     //These values only exist in PrintRequest
     protected $template;
-
     protected $scale;
     protected $rotation;
     protected $quality;
     protected $extent_feature;
-
     protected $printLegend = false;
-
     protected $overview;
-
     protected $legends;
-
 
     //These values exist in similar form in PrintRequest and ImageExportRequest
     protected $centerX;
     protected $centerY;
     protected $extentWidth;
     protected $extentHeight;
-
     protected $layers = array();
     protected $features = array();
 
     //Values that only exist in ImageExportRequest
     protected $width;
     protected $height;
-
     protected $format;
-
     protected $extra = array();
 
     public function __construct()
     {
 
-    }
-
-    public function fillFromGeoJSONbkk($data)
-    {
-        //Print request and image export request are not the same. If there is a template, decode json as print request
-        if (isset($data['template'])) {
-            //$this->template = $data['template'];
-
-            //$this->title = $data['extra']['title'];
-            //$this->scale = $data['scale_select'];
-
-            //$this->quality = $data['quality'];
-
-            //$this->rotation = $data['rotation'];
-
-            //$this->extent_feature = $data['extent_feature'];
-
-            //TODO: Vielleicht overview in eigener MapData?
-            $this->overview = $data['overview'];
-
-            /*if (array_key_exists('printLegend', $data)) {
-                $this->printLegend = $data['printLegend'];
-            }*/
-
-            //Values that exist in PrintRequest and in ImageExportRequest
-            //$this->centerX = $data['center']['x'];
-            //$this->centerY = $data['center']['y'];
-
-            //$this->extentWidth = $data['extent']['width'];
-            //$this->extentHeight = $data['extent']['height'];
-
-            /*foreach ($data['layers'] as $layer) {
-                if ($layer['type'] == 'wms') {
-                    array_push($this->layers, $layer);
-                }
-                if ($layer['type'] == 'GeoJSON+Style') {
-                    $this->features += $this->arrangeFeatures($layer);
-                }
-            }*/
-
-        } else {
-            //$this->centerX = $data['centerx'];
-            //$this->centerY = $data['centery'];
-
-            //$this->extentWidth = $data['extentwidth'];
-            //$this->extentHeight = $data['extentheight'];
-
-            //Values that only exist in ImageExportRequest
-            //$this->width = $data['width'];
-            //$this->height = $data['height'];
-
-            //$this->layers = $data['requests'];
-
-            /*foreach ($data['vectorLayers'] as $layer) {
-                $this->features += $this->arrangeFeatures($layer);
-            }*/
-
-            //$this->format = $data['format'];
-        }
     }
 
     public function fillFromGeoJSON($data)
