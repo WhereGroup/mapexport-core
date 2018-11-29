@@ -129,7 +129,7 @@ class MapData
      * @param int $margin
      * @return array
      */
-    public function fitBBtoFeatures($margin = 5)
+    public function fitExtentToFeatures($margin = 5)
     {
         //create lists of all x and y coordinates
         $xCoordinates = array();

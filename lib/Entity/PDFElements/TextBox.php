@@ -32,6 +32,6 @@ class TextBox
         $this->pdf->SetFontSize($this->element->fontSize);
 
         $this->pdf->SetXY($this->element->x - 1, $this->element->y);
-        $this->pdf->Cell($this->element->width, $this->element->height, $this->content);
+        $this->pdf->Cell($this->element->width, $this->element->height, utf8_decode($this->content));
     }
 }
