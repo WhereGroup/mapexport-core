@@ -123,6 +123,45 @@ class MapData
         }
     }
 
+    /**
+     * Changes the bounding box so the section only includes the features (plus margin if wanted)
+     *
+     * @param int $margin
+     * @return array
+     */
+    public function fitBBtoFeatures($margin = 5)
+    {
+        //create lists of all x and y coordinates
+        $xCoordinates = array();
+        $yCoordinates = array();
+        foreach ($this->features as $feature) {
+            foreach ($feature['geometry']['coordinates'] as $coordinates) {
+                foreach ($coordinates as $coordinate) {
+                    array_push($xCoordinates, $coordinate[0]);
+                    array_push($yCoordinates, $coordinate[1]);
+                }
+            }
+        }
+
+        $minX = min($xCoordinates);
+        $minY = min($yCoordinates);
+        $maxX = max($xCoordinates);
+        $maxY = max($yCoordinates);
+
+        //set extent
+        $this->extentWidth = ($maxX - $minX);
+        $this->extentHeight = ($maxY - $minY);
+
+        //set center
+        $this->centerX = $minX + $this->extentWidth/2;
+        $this->centerY = $minY + $this->extentHeight/2;
+
+        //add margin
+        $this->extentWidth *= (1 + $margin / 100);
+        $this->extentHeight *= (1 + $margin / 100);
+
+    }
+
     protected function arrangeFeatures($layer)
     {
         if (!is_array($layer)) {

@@ -82,7 +82,9 @@ class MapCanvas
 
     public function addLayer($img)
     {
-        imagecopy($this->image, $img, 0, 0, 0, 0, imagesx($img), imagesy($img));
+        if (isset($img)) {
+            imagecopy($this->image, $img, 0, 0, 0, 0, imagesx($img), imagesy($img));
+        }
     }
 
     public function addTile($img, $xPos, $yPos)
