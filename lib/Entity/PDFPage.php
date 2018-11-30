@@ -68,9 +68,11 @@ class PDFPage
             'underlined' => false
         );
 
+        $mLeft = 0.5;
+        $mTop = 1;
         array_push($this->elements,
-            new PDFElement('legend', 0.5, 1, $this->pdf->getWidth() / 10, $this->pdf->getHeight() / 10, $this->data,
-                $style));
+            new PDFElement('legend', $mLeft, $mTop, $this->pdf->getWidth() / 10 - $mLeft * 2,
+                $this->pdf->getHeight() / 10 - $mTop * 2, $this->data, $style));
 
         //legendPageImage
         $legendImageHeight = 1.5;
