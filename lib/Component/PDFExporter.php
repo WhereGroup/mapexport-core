@@ -33,7 +33,7 @@ class PDFExporter
         $pdf = new PDFExtensions();
 
         //Create pages from template
-        $legendOverflow = $this->createPDFFromTemplate2($pdf, $data, $conf, $templatePath);
+        $legendOverflow = $this->createPDFFromTemplate($pdf, $data, $conf, $templatePath);
 
         //Add pages for every geometry
         if ($data->getFromExtra('snapshots')) {
