@@ -118,13 +118,13 @@ class Legend
             $this->pdf->Cell(0, 0, utf8_decode($legendImage['title']));
             $y += 5;
 
-            $imagepath = 'tempLegend';
+            $imagepath = tempnam('', 'img');
             imagepng($legendImage['img'], $imagepath);
 
             //Add image onto pdf page
             $this->pdf->Image($imagepath, $x, $y, $imagewidth * 25.4 / 96, $imageheight * 25.4 / 96, 'png');
 
-            unlink('tempLegend');
+            unlink($imagepath);
 
         }
     }
