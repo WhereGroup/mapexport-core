@@ -84,21 +84,49 @@ class PDFExporter
 
     protected function createSnapshots($pdf, MapData $data, $conf, $templatePath)
     {
-        foreach ($data->getFeatures() as $feature) {
+        $features = $data->getFeatures();
+        $snapshotList = array();
+        foreach ($features as $feature) {
             //Create new MapData to create a new page with
             $snapshot = clone($data);
-            //Add description field
+            $snapshot->setScale(null);
+
+            $featureList = array();
             if (array_key_exists('MASSNAHMEVORGID', $feature)) {
+                $id = $feature['MASSNAHMEVORGID'];
                 $snapshot->addToExtra('description',
-                    'Vorgang: ' . $data->getFromExtra('vorgangId') . " Maßnahme: " . $feature['MASSNAHMEVORGID']);
+                    'Vorgang: ' . $data->getFromExtra('vorgangId') . " Maßnahme: " . $id);
+
+                //bundle all polygons with the same ID
+                foreach($features as $key => $compFeature){
+                    if ($id == $compFeature['MASSNAHMEVORGID']){
+                        array_push($featureList, $compFeature);
+                        //delete feature from list to avoid duplicates
+                        unset($features[$key]);
+                    }
+                }
+
+                //don't bundle polygons
+                //array_push($featureList, $feature);
+
             }
-            //set $feature as only feature
-            $snapshot->setFeatures(array($feature));
+
+            if(!empty($featureList)) {
+                //set $feature as only feature
+                $snapshot->setFeatures($featureList);
+
+                array_push($snapshotList, $snapshot);
+            }
+        }
+
+        foreach ($snapshotList as $snap){
+
             //Set Extent and center
-            $snapshot->fitExtentToFeatures();
+            $snap->fitExtentToFeatures();
 
             //add new page
-            $pdfFeaturePage = new PDFPage($pdf, $snapshot, $conf, 1, $templatePath);
+            $pdfFeaturePage = new PDFPage($pdf, $snap, $conf, 1, $templatePath);
+
             //Fill PDF Page
             $this->odgParser->getElements($pdfFeaturePage, $templatePath . '.odg', 1);
             $pdfFeaturePage->makePDFPage();
