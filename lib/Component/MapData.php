@@ -363,8 +363,10 @@ class MapData
 
     public function setFeatures($features)
     {
+        $this->features = array();
         foreach ($features as $layer) {
-            $this->features += $this->arrangeFeatures($layer);
+            $arrangedFeatures = $this->arrangeFeatures($layer);
+            $this->features = array_merge($this->features, $arrangedFeatures);
         }
     }
 
