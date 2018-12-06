@@ -190,11 +190,13 @@ class FeatureRenderer
 
     public function drawLineString(MapCanvas $canvas, $coordinates, $style)
     {
+        $strokeOpacity = array_key_exists('strokeOpacity', $style)?$style['strokeOpacity']:1;
+
         $img = $canvas->getImage();
 
         $rgbStrokeColor = $this->getColor($style['strokeColor']);
         $color = imagecolorallocatealpha($img, $rgbStrokeColor[0], $rgbStrokeColor[1], $rgbStrokeColor[2],
-            (1 - $style['strokeOpacity']) * 127);
+            (1 - $strokeOpacity) * 127);
 
         imagesetthickness($img, $style['strokeWidth']);
 
