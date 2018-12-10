@@ -28,7 +28,7 @@ class RasterRenderer
 
         //draw layer in one piece
         $layer['url'] = $this->getWMS($layer['url'], $width, $height, $canvas->getBB());
-        $image = $this->getImageFromLayer($layer, $width, $height);
+        $image = $this->getImageFromLayer($layer);
         $canvas->addLayer($image);
 
         return $canvas;
@@ -82,7 +82,7 @@ class RasterRenderer
 
                 //get image
                 $layer['url'] = $this->getWMS($layer['url'], $imageTileWidth, $imageTileHeight, $bb);
-                $image = $this->getImageFromLayer($layer, $imageTileWidth, $imageTileHeight);
+                $image = $this->getImageFromLayer($layer);
 
                 //cut margin
                 imagecopyresampled($croppedImage, $image, 0, 0, self::MARGIN, self::MARGIN, $imageTileWidthO,
@@ -125,10 +125,6 @@ class RasterRenderer
 
         if(strpos($contenttype, 'image') === 0 ) {
             $layerImage = imagecreatefromstring($result->getData());
-
-            if ($width != null && $height != null) {
-                $layerImage = imagescale($layerImage, $width, $height);
-            }
 
             imagealphablending($layerImage, false);
             imagesavealpha($layerImage, true);
