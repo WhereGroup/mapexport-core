@@ -156,7 +156,12 @@ class RasterRenderer
         //create new query with updated values
         parse_str($urlarray['query'], $query);
         $BBString = implode(',', $BB);
-        $query['BBOX'] = $BBString;
+        //make sure to overwrite old BBOX
+        if (array_key_exists('bbox', $query)) {
+            $query['bbox'] = $BBString;
+        } else {
+            $query['BBOX'] = $BBString;
+        }
         $query['WIDTH'] = $width;
         $query['HEIGHT'] = $height;
         $query = http_build_query($query);
