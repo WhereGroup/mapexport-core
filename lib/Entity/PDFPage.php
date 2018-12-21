@@ -48,10 +48,10 @@ class PDFPage
     public function addElement(\DOMElement $xml, $style = null)
     {
         $name = $xml->getAttribute('draw:name');
-        $x = $xml->getAttribute('svg:x');
-        $y = $xml->getAttribute('svg:y');
-        $width = $xml->getAttribute('svg:width');
-        $height = $xml->getAttribute('svg:height');
+        $x = (float)$xml->getAttribute('svg:x');
+        $y = (float)$xml->getAttribute('svg:y');
+        $width = (float)$xml->getAttribute('svg:width');
+        $height = (float)$xml->getAttribute('svg:height');
 
         //Adds the new element to list of all drawable elements on page
         array_push($this->elements, new PDFElement($name, $x, $y, $width, $height, $this->data, $style));

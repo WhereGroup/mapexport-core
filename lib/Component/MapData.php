@@ -99,6 +99,7 @@ class MapData
                     }
                     break;
                 case('printLegend'):
+                case('dynleg'):
                     $this->printLegend = $mapElement;
                     break;
                 case('format'):
@@ -153,8 +154,8 @@ class MapData
         $this->extentHeight = ($maxY - $minY);
 
         //set center
-        $this->centerX = $minX + $this->extentWidth/2;
-        $this->centerY = $minY + $this->extentHeight/2;
+        $this->centerX = $minX + $this->extentWidth / 2;
+        $this->centerY = $minY + $this->extentHeight / 2;
 
         //add margin
         $this->extentWidth *= (1 + $margin / 100);

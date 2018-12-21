@@ -73,7 +73,7 @@ class PDFExporter
 
             //$this->preparePageNo($pdf);
 
-            if ($pdfPages[$i]->containsLegend() ) {
+            if ($pdfPages[$i]->containsLegend()) {
                 //if the page has a place for the legend images, return the overflow
                 $legendOverflow = $pdfPages[$i]->getLegendOverflow();
 
@@ -98,8 +98,8 @@ class PDFExporter
                     'Vorgang: ' . $data->getFromExtra('vorgangId') . " Maßnahme: " . $id);
 
                 //bundle all polygons with the same ID
-                foreach($features as $key => $compFeature){
-                    if ($id == $compFeature['MASSNAHMEVORGID']){
+                foreach ($features as $key => $compFeature) {
+                    if ($id == $compFeature['MASSNAHMEVORGID']) {
                         array_push($featureList, $compFeature);
                         //delete feature from list to avoid duplicates
                         unset($features[$key]);
@@ -111,7 +111,7 @@ class PDFExporter
 
             }
 
-            if(!empty($featureList)) {
+            if (!empty($featureList)) {
                 //set $feature as only feature
                 $snapshot->setFeatures($featureList);
 
@@ -119,7 +119,7 @@ class PDFExporter
             }
         }
 
-        foreach ($snapshotList as $snap){
+        foreach ($snapshotList as $snap) {
 
             //Set Extent and center
             $snap->fitExtentToFeatures();
@@ -161,7 +161,7 @@ class PDFExporter
         //Arial kursiv 8
         $pdf->SetFont('Arial', 'I', intval(8));
         //Farbe
-        $pdf->SetTextColor( 0, 0, 0);
+        $pdf->SetTextColor(0, 0, 0);
         //Seitenzahl
         $pdf->Cell(0, 10, 'Seite ' . $pdf->PageNo() . '/{nb}', 0, 0, 'C');
     }
