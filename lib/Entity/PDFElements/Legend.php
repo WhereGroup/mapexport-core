@@ -39,6 +39,8 @@ class Legend
                 $result = $httpClient->open(current($legend));
                 $this->legendImages[$index]['title'] = key($legend);
                 $this->legendImages[$index]['img'] = imagecreatefromstring($result->getData());
+                imagealphablending($this->legendImages[$index]['img'], false);
+                imagesavealpha($this->legendImages[$index]['img'], true);
                 $index++;
             }
 
