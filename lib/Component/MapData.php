@@ -111,7 +111,12 @@ class MapData
                     }
                     break;
                 case('legends'):
-                    $this->legends = $mapElement;
+                    $this->legends = array();
+                    foreach($mapElement as $legendArray) {
+                        foreach($legendArray as $key => $legend) {
+                            $this->legends[$key] = $legend;
+                        }
+                    }
                     break;
                 case('overview'):
                     $this->overview = $mapElement;

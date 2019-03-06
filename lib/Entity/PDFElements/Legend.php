@@ -35,13 +35,18 @@ class Legend
 
             //fill legendImages with all images, even if they might not fit
             $index = 0;
-            foreach ($legends as $legend) {
-                $result = $httpClient->open(current($legend));
-                $this->legendImages[$index]['title'] = key($legend);
-                $this->legendImages[$index]['img'] = imagecreatefromstring($result->getData());
-                imagealphablending($this->legendImages[$index]['img'], false);
-                imagesavealpha($this->legendImages[$index]['img'], true);
-                $index++;
+            foreach ($legends as $key => $legend) {
+                try {
+                    $result = $httpClient->open($legend);
+
+                    $this->legendImages[$index]['title'] = $key;
+                    $this->legendImages[$index]['img'] = imagecreatefromstring($result->getData());
+                    imagealphablending($this->legendImages[$index]['img'], false);
+                    imagesavealpha($this->legendImages[$index]['img'], true);
+                    $index++;
+                } catch (\Exception $e){
+                    error_log("Could not draw legend. Url: " . $legend,0);
+                }
             }
 
             //set positions of every image and remove those that don't fit
