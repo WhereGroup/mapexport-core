@@ -155,7 +155,7 @@ class RasterRenderer
 
         //create new query with updated values
         parse_str($urlarray['query'], $query);
-        array_change_key_case($query, CASE_UPPER);
+        $query = array_change_key_case($query, CASE_UPPER);
         $BBString = implode(',', $BB);
         $query['BBOX'] = $BBString;
         $query['WIDTH'] = $width;
