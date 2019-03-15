@@ -166,17 +166,17 @@ class RasterRenderer
         if (array_key_exists('scheme', $urlarray)) {
             $url = $urlarray['scheme'] . '://';
         }
+        if (array_key_exists('user', $urlarray)) {
+            $url .= $urlarray['user'] . ':';
+        }
+        if (array_key_exists('pass', $urlarray)) {
+            $url .= $urlarray['pass'] . '@';
+        }
         if (array_key_exists('host', $urlarray)) {
             $url .= $urlarray['host'];
         }
         if (array_key_exists('port', $urlarray)) {
             $url .= ':' . $urlarray['port'];
-        }
-        if (array_key_exists('user', $urlarray)) {
-            $url .= $urlarray['user'];
-        }
-        if (array_key_exists('pass', $urlarray)) {
-            $url .= $urlarray['pass'];
         }
         if (array_key_exists('path', $urlarray)) {
             $url .= $urlarray['path'];
