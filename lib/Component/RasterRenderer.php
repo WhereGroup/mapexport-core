@@ -170,7 +170,7 @@ class RasterRenderer
             $url .= $urlarray['host'];
         }
         if (array_key_exists('port', $urlarray)) {
-            $url .= $urlarray['port'];
+            $url .= ':' . $urlarray['port'];
         }
         if (array_key_exists('user', $urlarray)) {
             $url .= $urlarray['user'];
