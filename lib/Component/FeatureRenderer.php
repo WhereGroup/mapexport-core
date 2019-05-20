@@ -9,6 +9,7 @@ class FeatureRenderer
     public function drawAllFeatures($canvas, $features)
     {
         foreach ($features as $feature) {
+
             $canvas = $this->drawFeature($canvas, $feature);
         }
 
@@ -91,6 +92,23 @@ class FeatureRenderer
                 }
                 $canvas = $this->drawMultiPoint($canvas, $pointArrays, $style);
                 break;
+            case 'Overlay':
+                $points = $canvas->transformCoords(array($geometry['coordinates']));
+
+                if (array_key_exists('label', $style)) {
+                    $xPos = $points[0][0];
+                    $yPos = $points[0][1];
+
+                    if (array_key_exists('labelXOffset', $style)) {
+                        $xPos += $style['labelXOffset'];
+                    }
+                    if (array_key_exists('labelYOffset', $style)) {
+                        $yPos += $style['labelYOffset'];
+                    }
+                    $style['labelAlign'] = 'lt';
+                    $canvas = $this->drawLabel($canvas, array($xPos, $yPos), $style);
+                }
+                break;
         }
 
         return $canvas;
@@ -157,11 +175,12 @@ class FeatureRenderer
 
         $imgCache = imagecreatetruecolor(imagesx($img), imagesy($img));
 
-        imagecolortransparent($imgCache, 0);
-        imagefill($imgCache, 0, 0, 0);
         imagealphablending($imgCache, false);
         imagesavealpha($imgCache, true);
         imagesetthickness($imgCache, $style['strokeWidth']);
+
+        $transparency = imagecolorallocatealpha($imgCache, 0, 0, 0, 127);
+        imagefill($imgCache, 0, 0, $transparency);
 
         foreach ($coordinates as $index => $pointArray) {
             $num_points = sizeof($pointArray);
@@ -175,7 +194,7 @@ class FeatureRenderer
             if ($index == 0) {
                 imagefilledpolygon($imgCache, $points, $num_points, $fillColor);
             } else {
-                imagefilledpolygon($imgCache, $points, $num_points, 0);
+                imagefilledpolygon($imgCache, $points, $num_points, $transparency);
             }
 
             imagepolygon($imgCache, $points, $num_points, $strokeColor);
@@ -254,16 +273,30 @@ class FeatureRenderer
     {
         $img = $canvas->getImage();
 
-        $rgbStrokeColor = $this->getColor($style['strokeColor']);
+        if(array_key_exists('strokeColor', $style)) {
+            $rgbStrokeColor = $this->getColor($style['strokeColor']);
+        } else {
+            $rgbStrokeColor = array(255,204,51);
+        }
+
+        if(isset($style['strokeOpacity'])) {
+            $style['strokeOpacity'] = 0;
+        }
+
         $textColor = imagecolorallocatealpha($img, $rgbStrokeColor[0], $rgbStrokeColor[1], $rgbStrokeColor[2],
             $style['strokeOpacity']);
 
         //TODO: Diesen Kram woanders festlegen
         //Textsize and font are never defined so they are hardcoded here
-        $textsize = 20;
+        $textsize = 10;
         $font = './components/open-sans/fonts/Bold/OpenSans-Bold.ttf';
 
         $textBBarray = imageftbbox($textsize, 0, $font, $style['label']);
+
+        //default position
+        if(!array_key_exists('labelAlign', $style)){
+            $style['labelAlign'] = 'cb';
+        }
 
         switch ($style['labelAlign']) {
             case 'lt':
@@ -298,6 +331,17 @@ class FeatureRenderer
                 break;
         }
 
+        //draw text outline
+        $borderSize = 1;
+        $backgroundColor = imagecolorallocatealpha($img, 0, 0, 0, 0);
+
+        for($i = $coordinates[0]-$borderSize; $i <= $coordinates[0]+$borderSize; $i++){
+            for($j = $coordinates[1]-$borderSize; $j <= $coordinates[1]+$borderSize; $j++){
+                imagettftext($img, $textsize, 0, $i, $j, $backgroundColor, $font, $style['label']);
+            }
+        }
+
+        //draw text
         imagettftext($img, $textsize, 0, $coordinates[0], $coordinates[1], $textColor, $font, $style['label']);
 
         $canvas->setImage($img);

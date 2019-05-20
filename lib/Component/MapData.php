@@ -94,8 +94,12 @@ class MapData
                     $this->layers = $mapElement;
                     break;
                 case('vectorLayers'):
+                case('geomLayers'):
                     foreach ($mapElement as $layer) {
-                        $this->features += $this->arrangeFeatures($layer);
+                        $features = $this->arrangeFeatures($layer);
+                        foreach($features as $feature) {
+                            array_push($this->features, $feature);
+                        }
                     }
                     break;
                 case('printLegend'):
@@ -175,6 +179,10 @@ class MapData
         }
 
         $vectorLayer = array();
+
+        if(!array_key_exists('type', $layer)){
+            $layer["type"] = 'unknown_type';
+        }
 
         foreach ($layer['geometries'] as $geometry) {
             array_push($vectorLayer, array(
