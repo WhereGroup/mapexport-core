@@ -85,11 +85,13 @@ class RasterRenderer
                 $image = $this->getImageFromLayer($layer);
 
                 //cut margin
-                imagecopyresampled($croppedImage, $image, 0, 0, self::MARGIN, self::MARGIN, $imageTileWidthO,
-                    $imageTileHeightO, $imageTileWidthO, $imageTileHeightO);
+                if($image != null) {
+                    imagecopyresampled($croppedImage, $image, 0, 0, self::MARGIN, self::MARGIN, $imageTileWidthO,
+                        $imageTileHeightO, $imageTileWidthO, $imageTileHeightO);
 
-                //draw image on canvas
-                $canvas->addTile($croppedImage, $j, $verTiles - $i);
+                    //draw image on canvas
+                    $canvas->addTile($croppedImage, $j, $verTiles - $i);
+                }
             }
         }
         return $canvas;
@@ -120,22 +122,30 @@ class RasterRenderer
 
     protected function getImageFromLayer($layer, $width = null, $height = null)
     {
-        $result = $this->httpClient->open($layer['url']);
-        $contenttype = $this->httpClient->headers['content_type'];
 
-        if(strpos($contenttype, 'image') === 0 ) {
-            $layerImage = imagecreatefromstring($result->getData());
+        try {
+            $result = $this->httpClient->open($layer['url']);
 
-            imagealphablending($layerImage, false);
-            imagesavealpha($layerImage, true);
 
-            //Set opacity
-            if (array_key_exists('opacity', $layer)) {
-                $transparency = 1 - $layer['opacity'];
-                imagefilter($layerImage, IMG_FILTER_COLORIZE, 0, 0, 0, 127 * $transparency);
+            $contenttype = $this->httpClient->headers['content_type'];
+
+            if(strpos($contenttype, 'image') === 0 ) {
+                $layerImage = imagecreatefromstring($result->getData());
+
+                imagealphablending($layerImage, false);
+                imagesavealpha($layerImage, true);
+
+                //Set opacity
+                if (array_key_exists('opacity', $layer)) {
+                    $transparency = 1 - $layer['opacity'];
+                    imagefilter($layerImage, IMG_FILTER_COLORIZE, 0, 0, 0, 127 * $transparency);
+                }
+
+                return $layerImage;
             }
 
-            return $layerImage;
+        } catch (\Exception $e){
+            error_log("Could not draw image. Url: " . $layer['url'],0);
         }
         return null;
     }
@@ -160,6 +170,13 @@ class RasterRenderer
         $query['BBOX'] = $BBString;
         $query['WIDTH'] = $width;
         $query['HEIGHT'] = $height;
+
+        if(isset($query['EXCEPTIONS'])){
+            //$query['EXCEPTIONS'] = 'application/vnd.ogc.se_xml';
+            //Remove all exception requests as they seem to cause problems (mapserver might not support them)
+            unset($query['EXCEPTIONS']);
+        }
+
         $query = http_build_query($query);
 
         //build new wms request
